@@ -30,7 +30,7 @@ public class Main {
             // read the input file line by line
             while (input.hasNextLine()) {
                 String line = input.nextLine();
-                if (line.charAt(0) != '~') // ignore comment lines
+                if (line.isEmpty() || line.charAt(0) != '~') // ignore comment lines and empty lines
                     if (!firstLook(line))
                         break;
 

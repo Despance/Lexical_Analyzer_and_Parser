@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Scanner;
@@ -11,7 +10,7 @@ public class Main {
     static String[] keywords = {"define", "let", "cond", "if", "begin"}; // reserved keywords
     static ArrayList<String> output = new ArrayList<>();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         boolean testing = false;
         String filePath = "input.txt";
@@ -19,13 +18,13 @@ public class Main {
         if (args.length == 0 && !testing){
             System.out.print("Enter the filepath: ");
             filePath = new Scanner(System.in).nextLine();
-        }else if(!args[0].isEmpty()){
+        }
+        else if(!args[0].isEmpty()) {
             filePath = args[0];
         }
 
-
         try {
-            File inputFile = new File("input.txt");
+            File inputFile = new File(filePath);
             Scanner input = new Scanner(inputFile);
 
             // read the input file line by line
@@ -51,7 +50,6 @@ public class Main {
             while (fileReader.hasNextLine())
                 System.out.println(fileReader.nextLine());
             fileReader.close();
-
         }
         catch (Exception ex) {
             System.out.println(ex.getMessage());
@@ -138,7 +136,7 @@ public class Main {
 
         if (valid){
             isReserved(token, startIndex);
-            return i-1;
+            return i;
         }
         else {
             output.clear();
@@ -195,7 +193,7 @@ public class Main {
         }
         if (valid) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex+1));
-            return i-1; // it's a valid token return next tokens starting index
+            return i; // it's a valid token return next tokens starting index
         }
         else  {
             output.clear();
@@ -229,7 +227,7 @@ public class Main {
 
         if (valid) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex+1));
-            return i-1; // it's a valid token return next tokens starting index
+            return i; // it's a valid token return next tokens starting index
         }
         else {
             output.clear();
@@ -263,7 +261,7 @@ public class Main {
 
         if (valid) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex+1));
-            return i-1; // it's a valid token return next tokens starting index
+            return i; // it's a valid token return next tokens starting index
         }
         else {
             output.clear();
@@ -272,7 +270,7 @@ public class Main {
         }
     }
 
-    /**This function check if the token is a valid character*/
+    /**This function checks if the token is a valid character*/
     public static int isChar(String line, int startIndex) {
         String token = "" + line.charAt(startIndex);
         int quoteCount = 1, bsCount = 0;
@@ -281,14 +279,18 @@ public class Main {
         int i = startIndex + 1;
         for (; i < line.length(); i++) {
             char ch = line.charAt(i);
-            token += ch;
 
             if (ch == ' ') {
                 if (line.charAt(i-1) != '\'')
                     valid = false;
                 break;
             }
+            else if (isBracket(ch)) {
+                if (quoteCount >= 2)
+                    break;
+            }
 
+            token += ch;
             if (bsCount == 1) {
                 if (ch != '\'' && ch != '\\')
                     valid = false;
@@ -309,12 +311,12 @@ public class Main {
                 hasUni = true;
             }
         }
-        if (bsCount == 1 && quoteCount != 3)
+        if ((bsCount == 1 && quoteCount != 3) || quoteCount < 2)
             valid = false;
 
         if (valid) {
             output.add(String.format("CHAR %d:%d", lineCount, startIndex+1));
-            return i-1;
+            return i;
         }
         else {
             output.clear();
@@ -323,10 +325,12 @@ public class Main {
         }
     }
 
+    /**This function checks if character is bracket*/
     public static boolean isBracket(char ch) {
         return ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
     }
 
+    /**This function checks if token is keyword*/
     public static void isReserved(String token, int startIndex){
         if (!isBoolean(token,startIndex)){
             for (int i = 0; i < keywords.length; i++) {
@@ -337,12 +341,10 @@ public class Main {
             }
             output.add(String.format("IDENTIFIER %d:%d", lineCount, startIndex+1));
         }
-
     }
 
-    //Boolean
+    /**This function checks if the token is a boolean*/
     public static boolean isBoolean(String token,int startIndex){
-
         if (token.equals("true") || token.equals("false")){
             output.add(String.format("BOOLEAN %d:%d",lineCount,startIndex+1));
             return true;
@@ -350,7 +352,7 @@ public class Main {
         return false;
     }
 
-    //String
+    /**This function checks if the token is a valid string*/
     public static int isString(String line,int startIndex){
         String token = "" + line.charAt(startIndex);
 
@@ -363,25 +365,20 @@ public class Main {
             char ch = line.charAt(i);
             token += ch;
 
-            if (ch == '\"'){
+            if (ch == '\"') {
                 if (!previousBackslash){
                     isExited = true;
                     break;
                 }
                 else
                     previousBackslash = false;
-            } else if (ch == '\\') {
-                if (!previousBackslash)
-                    previousBackslash = true;
-                else
-                    previousBackslash = false;
-            } else if (Character.isDefined(ch) && !previousBackslash) { // check if character defined in unicode
-
-            }else
+            }
+            else if (ch == '\\') {
+                previousBackslash = !previousBackslash;
+            }
+            else if (!Character.isDefined(ch) || previousBackslash) // check if character defined in unicode
                 valid = false;
-
         }
-
 
         if (valid && isExited) {
             output.add(String.format("STRING %d:%d", lineCount, startIndex+1));
@@ -393,7 +390,4 @@ public class Main {
             return -1;
         }
     }
-
-
-
 }

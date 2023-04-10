@@ -273,48 +273,35 @@ public class Main {
     /**This function checks if the token is a valid character*/
     public static int isChar(String line, int startIndex) {
         String token = "" + line.charAt(startIndex);
-        int quoteCount = 1, bsCount = 0;
-        boolean hasUni = false, valid = true;
+        int bsCount = 0;
+        boolean hasUni = false, valid = true, escape = false , isExited = false;
 
         int i = startIndex + 1;
         for (; i < line.length(); i++) {
             char ch = line.charAt(i);
-
-            if (ch == ' ') {
-                if (line.charAt(i-1) != '\'')
-                    valid = false;
-                break;
-            }
-            else if (isBracket(ch)) {
-                if (quoteCount >= 2)
-                    break;
-            }
-
             token += ch;
-            if (bsCount == 1) {
-                if (ch != '\'' && ch != '\\')
-                    valid = false;
+
+            if (ch == '\'') {
+                if (!escape) { // if ' comes after escape character continue else terminate
+                    isExited = true;
+                    break;
+                }
+                else
+                    escape = false;
             }
-            if (ch == '\\') {
+            else if (ch == '\\') {
                 bsCount++;
-                if (hasUni || bsCount > 2)
-                    valid = false;
-            }
-            else if (ch == '\'') {
-                quoteCount++;
-                if (bsCount == 0 && quoteCount > 2) // can't have more than 2 quote without backslash -> '\''
+                escape = !escape;
+                if (hasUni || bsCount > 2) // can't have both unicode and backslash, and more than two backslash
                     valid = false;
             }
             else if (Character.isDefined(ch)) { // check if character defined in unicode
-                if (bsCount != 0 || hasUni) // can't have both unicode and backslash, or multiple unicodes
-                    valid = false;
                 hasUni = true;
+                if (!hasUni || bsCount != 0) // can't have both unicode and backslash, and more than one unicode
+                    valid = false;
             }
         }
-        if ((bsCount == 1 && quoteCount != 3) || quoteCount < 2)
-            valid = false;
-
-        if (valid) {
+        if (valid && isExited) {
             output.add(String.format("CHAR %d:%d", lineCount, startIndex+1));
             return i;
         }
@@ -366,7 +353,7 @@ public class Main {
             token += ch;
 
             if (ch == '\"') {
-                if (!previousBackslash){
+                if (!previousBackslash) {
                     isExited = true;
                     break;
                 }

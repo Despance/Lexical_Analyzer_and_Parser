@@ -12,6 +12,18 @@ public class Main {
     static ArrayList<String> output = new ArrayList<>();
 
     public static void main(String[] args) throws IOException {
+
+        boolean testing = false;
+        String filePath = "input.txt";
+
+        if (args.length == 0 && !testing){
+            System.out.print("Enter the filepath: ");
+            filePath = new Scanner(System.in).nextLine();
+        }else if(!args[0].isEmpty()){
+            filePath = args[0];
+        }
+
+
         try {
             File inputFile = new File("input.txt");
             Scanner input = new Scanner(inputFile);
@@ -31,9 +43,15 @@ public class Main {
 
             for (int i = 0; i < output.size(); i++) {
                 writer.write(output.get(i));
-                writer.write("");
+                writer.write("\n");
             }
             writer.close();
+
+            Scanner fileReader = new Scanner(outputFile);
+            while (fileReader.hasNextLine())
+                System.out.println(fileReader.nextLine());
+            fileReader.close();
+
         }
         catch (Exception ex) {
             System.out.println(ex.getMessage());
@@ -78,6 +96,12 @@ public class Main {
                 // check for character token
                 else if (ch == '\'') {
                     i = isChar(line, i); // next tokens index
+                    if (i == -1) // lexical error
+                        return false;
+                }
+                // check for string token
+                else if (ch == '\"') {
+                    i = isString(line, i); // next tokens index
                     if (i == -1) // lexical error
                         return false;
                 }
@@ -264,6 +288,7 @@ public class Main {
                     valid = false;
                 break;
             }
+
             if (bsCount == 1) {
                 if (ch != '\'' && ch != '\\')
                     valid = false;
@@ -303,12 +328,72 @@ public class Main {
     }
 
     public static void isReserved(String token, int startIndex){
-        for (int i = 0; i < keywords.length; i++) {
-            if (keywords[i].equals(token)) {
-                output.add(String.format(("%s %d:%d"), token.toUpperCase(Locale.US), lineCount, startIndex+1));
-                return;
+        if (!isBoolean(token,startIndex)){
+            for (int i = 0; i < keywords.length; i++) {
+                if (keywords[i].equals(token)) {
+                    output.add(String.format(("%s %d:%d"), token.toUpperCase(Locale.US), lineCount, startIndex+1));
+                    return;
+                }
             }
+            output.add(String.format("IDENTIFIER %d:%d", lineCount, startIndex+1));
         }
-        output.add(String.format("IDENTIFIER %d:%d", lineCount, startIndex+1));
+
     }
+
+    //Boolean
+    public static boolean isBoolean(String token,int startIndex){
+
+        if (token.equals("true") || token.equals("false")){
+            output.add(String.format("BOOLEAN %d:%d",lineCount,startIndex+1));
+            return true;
+        }
+        return false;
+    }
+
+    //String
+    public static int isString(String line,int startIndex){
+        String token = "" + line.charAt(startIndex);
+
+        boolean valid = true;
+        boolean previousBackslash = false;
+        boolean isExited = false;
+
+        int i = startIndex + 1;
+        for (; i < line.length(); i++) {
+            char ch = line.charAt(i);
+            token += ch;
+
+            if (ch == '\"'){
+                if (!previousBackslash){
+                    isExited = true;
+                    break;
+                }
+                else
+                    previousBackslash = false;
+            } else if (ch == '\\') {
+                if (!previousBackslash)
+                    previousBackslash = true;
+                else
+                    previousBackslash = false;
+            } else if (Character.isDefined(ch) && !previousBackslash) { // check if character defined in unicode
+
+            }else
+                valid = false;
+
+        }
+
+
+        if (valid && isExited) {
+            output.add(String.format("STRING %d:%d", lineCount, startIndex+1));
+            return i;
+        }
+        else {
+            output.clear();
+            output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex+1, token));
+            return -1;
+        }
+    }
+
+
+
 }

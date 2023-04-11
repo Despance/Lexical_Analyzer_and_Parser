@@ -1,43 +1,49 @@
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Scanner;
 
+/**
+ * PPL Project 1
+ * 1-	Mustafa Emir Uyar (Representative) 150120007
+ * 2-	Ege Keklikçi 150121029
+ * 3-	Umut Özil 150121019
+ */
 public class Main {
 
     static int lineCount = 1;
     static String[] keywords = {"define", "let", "cond", "if", "begin"}; // reserved keywords
     static ArrayList<String> output = new ArrayList<>();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
-        boolean testing = false;
+        //Taking the input file's path.
         String filePath = "input.txt";
 
-        if (args.length == 0 && !testing) {
+        if (args.length == 0) {
             System.out.print("Enter the filepath: ");
             filePath = new Scanner(System.in).nextLine();
         } else if (!args[0].isEmpty()) {
             filePath = args[0];
         }
 
-
         try {
-            File inputFile = new File("input.txt");
+            //Open the file using the filepath
+            File inputFile = new File(filePath);
             Scanner input = new Scanner(inputFile);
 
             // read the input file line by line
             while (input.hasNextLine()) {
                 String line = input.nextLine();
-                if (line.charAt(0) != '~') // ignore comment lines
+                if (line.isEmpty() || line.charAt(0) != '~') // ignore comment lines and empty lines
                     if (!firstLook(line))
                         break;
 
                 lineCount += 1;
             }
 
+            //Create the output file
             File outputFile = new File("output.txt");
             FileWriter writer = new FileWriter(outputFile);
 
@@ -47,6 +53,7 @@ public class Main {
             }
             writer.close();
 
+            //Writing the output to the console
             Scanner fileReader = new Scanner(outputFile);
             while (fileReader.hasNextLine())
                 System.out.println(fileReader.nextLine());
@@ -111,6 +118,9 @@ public class Main {
         return true;
     }
 
+    /**
+     * This function checks if the current line has identifiers.
+     */
     public static int isIdentifier(String line, int startIndex) {
         String token = "" + line.charAt(startIndex);
         boolean isSingle = false, valid = true;
@@ -138,7 +148,7 @@ public class Main {
 
         if (valid) {
             isReserved(token, startIndex);
-            return i - 1;
+            return i;
         } else {
             output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
@@ -193,7 +203,7 @@ public class Main {
         }
         if (valid) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
-            return i - 1; // it's a valid token return next tokens starting index
+            return i; // it's a valid token return next tokens starting index
         } else {
             output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
@@ -227,7 +237,7 @@ public class Main {
 
         if (valid) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
-            return i - 1; // it's a valid token return next tokens starting index
+            return i; // it's a valid token return next tokens starting index
         } else {
             output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
@@ -261,7 +271,7 @@ public class Main {
 
         if (valid) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
-            return i - 1; // it's a valid token return next tokens starting index
+            return i; // it's a valid token return next tokens starting index
         } else {
             output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
@@ -270,48 +280,38 @@ public class Main {
     }
 
     /**
-     * This function check if the token is a valid character
+     * This function checks if the token is a valid character
      */
     public static int isChar(String line, int startIndex) {
         String token = "" + line.charAt(startIndex);
-        int quoteCount = 1, bsCount = 0;
-        boolean hasUni = false, valid = true;
+        int bsCount = 0;
+        boolean hasUni = false, valid = true, escape = false, isExited = false;
 
         int i = startIndex + 1;
         for (; i < line.length(); i++) {
             char ch = line.charAt(i);
             token += ch;
 
-            if (ch == ' ') {
-                if (line.charAt(i - 1) != '\'')
-                    valid = false;
-                break;
-            }
-
-            if (bsCount == 1) {
-                if (ch != '\'' && ch != '\\')
-                    valid = false;
-            }
-            if (ch == '\\') {
+            if (ch == '\'') {
+                if (!escape) { // if ' comes after escape character continue else terminate
+                    isExited = true;
+                    break;
+                } else
+                    escape = false;
+            } else if (ch == '\\') {
                 bsCount++;
-                if (hasUni || bsCount > 2)
-                    valid = false;
-            } else if (ch == '\'') {
-                quoteCount++;
-                if (bsCount == 0 && quoteCount > 2) // can't have more than 2 quote without backslash -> '\''
+                escape = !escape;
+                if (hasUni || bsCount > 2) // can't have both unicode and backslash, and more than two backslash
                     valid = false;
             } else if (Character.isDefined(ch)) { // check if character defined in unicode
-                if (bsCount != 0 || hasUni) // can't have both unicode and backslash, or multiple unicodes
-                    valid = false;
                 hasUni = true;
+                if (!hasUni || bsCount != 0) // can't have both unicode and backslash, and more than one unicode
+                    valid = false;
             }
         }
-        if (bsCount == 1 && quoteCount != 3)
-            valid = false;
-
-        if (valid) {
+        if (valid && isExited) {
             output.add(String.format("CHAR %d:%d", lineCount, startIndex + 1));
-            return i - 1;
+            return i;
         } else {
             output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
@@ -319,10 +319,16 @@ public class Main {
         }
     }
 
+    /**
+     * This function checks if character is brackets
+     */
     public static boolean isBracket(char ch) {
         return ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
     }
 
+    /**
+     * This function checks if token is keyword
+     */
     public static void isReserved(String token, int startIndex) {
         if (!isBoolean(token, startIndex)) {
             for (int i = 0; i < keywords.length; i++) {
@@ -374,9 +380,7 @@ public class Main {
                     previousBackslash = false;
             } else if (ch == '\\') {
                 previousBackslash = !previousBackslash;
-            } else if (Character.isDefined(ch) && !previousBackslash) { // check if the character is defined in unicode
-
-            } else   // in any other condition the string is invalid
+            } else if (!Character.isDefined(ch) || previousBackslash) // check if character defined in unicode
                 valid = false;
 
         }

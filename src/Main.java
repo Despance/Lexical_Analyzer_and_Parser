@@ -119,9 +119,10 @@ public class Main {
     public static int isIdentifier(String line, int startIndex) {
         String token = "" + line.charAt(startIndex);
         boolean isSingle = false, valid = true;
+        char prev = line.charAt(startIndex);
 
         // check if it's a single token identifier
-        if (line.charAt(startIndex) == '.' || line.charAt(startIndex) == '+' || line.charAt(startIndex) == '-')
+        if (prev == '.' || prev == '+' || prev == '-')
             isSingle = true;
 
         int i = startIndex + 1;
@@ -133,7 +134,7 @@ public class Main {
 
             token += ch;
             if (isSingle) {
-                if (Character.isDigit(ch) || ch == '.')
+                if ((Character.isDigit(ch) || (ch == '.' && prev!='.')) && valid)
                     return isNumber(line, startIndex);
                 else
                     valid = false;

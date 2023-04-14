@@ -11,7 +11,7 @@ import java.util.Scanner;
  * 3-	Umut Özil 150121019
  */
 
-public class Last {
+public class Main {
 
     static int lineCount = 1;
     static String[] keywords = {"define", "let", "cond", "if", "begin"}; // reserved keywords

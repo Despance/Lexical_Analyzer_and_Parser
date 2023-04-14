@@ -148,7 +148,7 @@ public class Main {
 
         if (valid) {
             isReserved(token, startIndex);
-            return i;
+            return i - 1;
         } else {
             output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
@@ -203,7 +203,7 @@ public class Main {
         }
         if (valid) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
-            return i; // it's a valid token return next tokens starting index
+            return i - 1; // it's a valid token return next tokens starting index
         } else {
             output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
@@ -237,7 +237,7 @@ public class Main {
 
         if (valid) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
-            return i; // it's a valid token return next tokens starting index
+            return i - 1; // it's a valid token return next tokens starting index
         } else {
             output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
@@ -271,7 +271,7 @@ public class Main {
 
         if (valid) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
-            return i; // it's a valid token return next tokens starting index
+            return i - 1; // it's a valid token return next tokens starting index
         } else {
             output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));

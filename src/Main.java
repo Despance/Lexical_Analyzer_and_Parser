@@ -10,6 +10,7 @@ import java.util.Scanner;
  * 2-	Ege Keklikçi 150121029
  * 3-	Umut Özil 150121019
  */
+
 public class Main {
 
     static int lineCount = 1;
@@ -179,13 +180,12 @@ public class Main {
         int i = startIndex + 1;
         for (; i < line.length(); i++) {
             char ch = line.charAt(i);
-            token += ch;
 
-            if (ch == ' ') // end of token
+            if (ch == ' ' || isBracket(ch)) // end of token
                 break;
-            else if (isBracket(ch)) // end of token
-                break;
-            else if (ch == '.') {
+
+            token += ch;
+            if (ch == '.') {
                 if (!hasDot)
                     hasDot = true;
                 else
@@ -201,7 +201,7 @@ public class Main {
             } else if (!Character.isDigit(ch))
                 valid = false;
         }
-        if (valid) {
+        if (valid && Character.isDigit(token.charAt(token.length() - 1))) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
             return i - 1; // it's a valid token return next tokens starting index
         } else {
@@ -218,24 +218,26 @@ public class Main {
         String token = "" + line.charAt(startIndex);
         boolean valid = true;
 
-        int i;
-        if (line.charAt(startIndex + 1) == 'x') { // check if it's a hexadecimal number
-            i = startIndex + 2;
+        int i = startIndex + 1;
+        if (line.charAt(i) == 'x') { // check if it's a hexadecimal number
+            token += "x";
+            i++;
             for (; i < line.length(); i++) {
                 char ch = line.charAt(i);
-                token += ch;
 
-                if (ch == ' ') // end of token
+                if (ch == ' ' || isBracket(ch)) // end of token
                     break;
-                else if (isBracket(ch)) // end of token
-                    break;
-                else if (!Character.isDigit(ch) && !('a' <= ch && ch <= 'f') && !('A' <= ch && ch <= 'F'))
+
+                token += ch;
+                if (!Character.isDigit(ch) && !('a' <= ch && ch <= 'f') && !('A' <= ch && ch <= 'F'))
                     valid = false;
             }
         } else
             return -2; // not hex
 
-        if (valid) {
+        if (valid && (Character.isDigit(token.charAt(token.length() - 1)) || ('a' <= token.charAt(token.length() - 1) &&
+                token.charAt(token.length() - 1) <= 'f') || ('A' <= token.charAt(token.length() - 1) &&
+                token.charAt(token.length() - 1) <= 'F'))) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
             return i - 1; // it's a valid token return next tokens starting index
         } else {
@@ -252,24 +254,24 @@ public class Main {
         String token = "" + line.charAt(startIndex);
         boolean valid = true;
 
-        int i;
-        if (line.charAt(startIndex + 1) == 'b') { // check if it's a binary number
-            i = startIndex + 2;
+        int i = startIndex + 1;
+        if (line.charAt(i) == 'b') { // check if it's a binary number
+            token += "b";
+            i++;
             for (; i < line.length(); i++) {
                 char ch = line.charAt(i);
-                token += ch;
 
-                if (ch == ' ') // end of token
+                if (ch == ' ' || isBracket(ch)) // end of token
                     break;
-                else if (isBracket(ch)) // end of token
-                    break;
-                else if (ch != '1' && ch != '0')
+
+                token += ch;
+                if (ch != '1' && ch != '0')
                     valid = false;
             }
         } else
             return -2; // not binary
 
-        if (valid) {
+        if (valid && (token.charAt(token.length() - 1) == '1' || token.charAt(token.length() - 1) == '0')) {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
             return i - 1; // it's a valid token return next tokens starting index
         } else {
@@ -396,6 +398,4 @@ public class Main {
             return -1;
         }
     }
-
-
 }

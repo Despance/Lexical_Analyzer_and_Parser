@@ -84,14 +84,9 @@ public class Main {
                     output.add(String.format("LEFTCURLYB %d:%d", lineCount, (i + 1)));
                 else if (ch == '}')
                     output.add(String.format("RIGHTCURLYB %d:%d", lineCount, (i + 1)));
-                    // check if it's a single token identifier or a number
-                else if (ch == '.' || ch == '+' || ch == '-') {
-                    i = isIdentifier(line, i);
-                    if (i == -1) // lexical error
-                        return false;
-                }
-                // check for identifier token
-                else if (ch == '!' || ch == '*' | ch == '/' || ch == ':' || ('<' <= ch && ch <= '?') || ('a' <= ch && ch <= 'z')) {
+                    // check for identifier token
+                else if (ch == '.' || ch == '+' || ch == '-' || ch == '!' ||
+                        ch == '*' || ch == '/' || ch == ':' || ('<' <= ch && ch <= '?') || ('a' <= ch && ch <= 'z')) {
                     i = isIdentifier(line, i);
                     if (i == -1) // lexical error
                         return false;
@@ -174,7 +169,8 @@ public class Main {
                 if (result != -2)
                     return result;
             }
-        }
+        } else if (line.charAt(startIndex) == '.')
+            hasDot = true;
 
         // check for decimal and floating-point number
         int i = startIndex + 1;

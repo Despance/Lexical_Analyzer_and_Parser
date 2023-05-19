@@ -146,7 +146,6 @@ public class Main {
             isReserved(token, startIndex);
             return i - 1;
         } else {
-            output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
             return -1; // lexical error
         }
@@ -201,7 +200,6 @@ public class Main {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
             return i - 1; // it's a valid token return next tokens starting index
         } else {
-            output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
             return -1; // lexical error
         }
@@ -237,7 +235,6 @@ public class Main {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
             return i - 1; // it's a valid token return next tokens starting index
         } else {
-            output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
             return -1; // lexical error
         }
@@ -271,7 +268,6 @@ public class Main {
             output.add(String.format("NUMBER %d:%d", lineCount, startIndex + 1));
             return i - 1; // it's a valid token return next tokens starting index
         } else {
-            output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
             return -1; // lexical error
         }
@@ -311,7 +307,6 @@ public class Main {
             output.add(String.format("CHAR %d:%d", lineCount, startIndex + 1));
             return i;
         } else {
-            output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
             return -1;
         }
@@ -389,7 +384,6 @@ public class Main {
             return i;
         } else {
             //throw and error if the output is invalid
-            output.clear();
             output.add(String.format("LEXICAL ERROR [%d:%d]: Invalid token '%s'", lineCount, startIndex + 1, token));
             return -1;
         }

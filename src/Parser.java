@@ -1,18 +1,17 @@
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Parser {
     static int depth = 0;
+
     static TOKENS currentToken;
     static String currentLexeme;
-    static int lineNumber = 0;
-    static File input;
-    static FileReader sourceCode;
-    static Scanner readToken;
-    static BufferedReader readCode;
+
+    static ArrayList<String> tokens = new ArrayList<>();
+    static ArrayList<String> codeLines = new ArrayList<>();
+    static int cursor = 0;
 
     static boolean SUCCESS() {
         depth--;
@@ -25,48 +24,47 @@ public class Parser {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        input = new File("output.txt");
-        sourceCode = new FileReader("input.txt");
+        File input = new File("output.txt");
+        File sourceCode = new File("input.txt");
 
-        readToken = new Scanner(input);
-        readCode = new BufferedReader(sourceCode);
+        Scanner sc = new Scanner(input);
+        while (sc.hasNextLine()) {
+            tokens.add(sc.nextLine());
+        }
+
+        sc = new Scanner(sourceCode);
+        while (sc.hasNextLine()) {
+            codeLines.add(sc.nextLine());
+        }
 
         Program();
     }
 
     public static boolean lex() {
-        try {
-            int lineNumber;
-            if (readToken.hasNext()) {
-                currentToken = TOKENS.valueOf(readToken.next());
+        if (cursor >= tokens.size())
+            return false;
 
-                String pos = readToken.next();
-                lineNumber = Integer.parseInt(pos.substring(0, pos.indexOf(':')));
-            } else
-                return false;
+        String[] tokenInfo = tokens.get(cursor).split(" ");
+        currentToken = TOKENS.valueOf(tokenInfo[0]);
 
-            if (lineNumber != Parser.lineNumber + 1) {
-                readCode.readLine();
-                Parser.lineNumber++;
-            }
+        int lineNumber = Integer.parseInt(tokenInfo[1].substring(0, tokenInfo[1].indexOf(':'))) - 1;
+        int index = Integer.parseInt(tokenInfo[1].substring(tokenInfo[1].indexOf(':') + 1)) - 1;
 
-            int ch;
-            currentLexeme = "";
-            do {
-                ch = readCode.read();
-                if (ch == -1)
+        cursor++;
+
+        String line = codeLines.get(lineNumber);
+        char ch = line.charAt(index);
+        currentLexeme = String.valueOf(line.charAt(index));
+
+        if (!isBracket(ch)) {
+            for (int i = 1; i < line.length() - index; i++) {
+                ch = line.charAt(index + i);
+                if (ch == ' ' || isBracket(ch))
                     break;
-                currentLexeme += (char) ch;
+                currentLexeme += ch;
             }
-            while (ch != ' ' && !isBracket((char) ch));
-            for (int i = 0; i < depth; i++) {
-                System.out.print('\t');
-            }
-            System.out.println(currentToken.toString() + " (" + currentLexeme + ")");
-
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
         }
+
         return true;
     }
 
@@ -76,14 +74,13 @@ public class Parser {
         }
         System.out.println("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
-
-
         depth++;
+
         if (TopLevelForm())
             Program();
+
         return SUCCESS();
     }
-
 
     static boolean TopLevelForm() {
         for (int i = 0; i < depth; i++) {
@@ -92,14 +89,17 @@ public class Parser {
         System.out.println("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         depth++;
+
         lex();
         if (currentToken != TOKENS.LEFTPAR)
             return FAILURE();
         if (!SecondLevelForm())
             return FAILURE();
+
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
+
         return SUCCESS();
     }
 
@@ -111,22 +111,22 @@ public class Parser {
         }.getClass().getEnclosingMethod().getName() + ">");
         depth++;
 
-        if (Definition()) {
+        int temp = cursor;
+        if (Definition())
             return SUCCESS();
-        } else {
-            lex();
-            if (currentToken != TOKENS.LEFTPAR)
-                return FAILURE();
 
-            if (!FunCall())
-                return FAILURE();
+        cursor = temp;
+        lex();
+        if (currentToken != TOKENS.LEFTPAR)
+            return FAILURE();
+        if (!FunCall())
+            return FAILURE();
 
-            lex();
-            if (currentToken != TOKENS.RIGHTPAR)
-                return FAILURE();
+        lex();
+        if (currentToken != TOKENS.RIGHTPAR)
+            return FAILURE();
 
-            return SUCCESS();
-        }
+        return SUCCESS();
     }
 
     static boolean Definition() {
@@ -142,6 +142,7 @@ public class Parser {
             return FAILURE();
         if (!DefinitionRight())
             return FAILURE();
+
         return SUCCESS();
     }
 
@@ -157,24 +158,26 @@ public class Parser {
         if (currentToken == TOKENS.IDENTIFIER) {
             if (!Expression())
                 return FAILURE();
+
             return SUCCESS();
         }
 
         if (currentToken != TOKENS.LEFTPAR)
             return FAILURE();
+
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
             return FAILURE();
         if (!ArgList())
             return FAILURE();
-        // WE DON'T TO LEX HERE
+
+        lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
         if (!Statements())
             return FAILURE();
 
         return SUCCESS();
-
     }
 
     static boolean ArgList() {
@@ -185,9 +188,13 @@ public class Parser {
         }.getClass().getEnclosingMethod().getName() + ">");
         depth++;
 
+        int temp = cursor;
         lex();
-        if (currentToken == TOKENS.IDENTIFIER)
+        if (currentToken == TOKENS.IDENTIFIER) {
             ArgList();
+        } else
+            cursor = temp;
+
         return SUCCESS();
     }
 
@@ -199,16 +206,17 @@ public class Parser {
         }.getClass().getEnclosingMethod().getName() + ">");
         depth++;
 
+        int temp = cursor;
         if (Expression())
             return SUCCESS();
 
+        cursor = temp;
         if (!Definition())
             return FAILURE();
         if (!Statements())
             return FAILURE();
 
         return SUCCESS();
-
     }
 
     static boolean Expressions() {
@@ -219,8 +227,12 @@ public class Parser {
         }.getClass().getEnclosingMethod().getName() + ">");
         depth++;
 
+        int temp = cursor;
         if (Expression())
             Expressions();
+        else
+            cursor = temp;
+
         return SUCCESS();
     }
 
@@ -248,23 +260,13 @@ public class Parser {
                 if (!Expr())
                     return FAILURE();
                 lex();
-                if (currentToken != TOKENS.RIGHTPAR) {
+                if (currentToken != TOKENS.RIGHTPAR)
                     return FAILURE();
-                }
-
-
                 break;
             default:
                 return FAILURE();
-
         }
         return SUCCESS();
-    }
-
-
-    public static boolean isBracket(char ch) {
-        return ch
-                == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
     }
 
     public static boolean Expr() {
@@ -275,14 +277,23 @@ public class Parser {
         }.getClass().getEnclosingMethod().getName() + ">");
         depth++;
 
+        int temp = cursor;
         if (LetExpression())
             return SUCCESS();
+
+        cursor = temp;
         if (CondExpression())
             return SUCCESS();
+
+        cursor = temp;
         if (IfExpression())
             return SUCCESS();
+
+        cursor = temp;
         if (BeginExpression())
             return SUCCESS();
+
+        cursor = temp;
         if (FunCall())
             return SUCCESS();
 
@@ -395,7 +406,9 @@ public class Parser {
         }.getClass().getEnclosingMethod().getName() + ">");
         depth++;
 
-        VarDefs();
+        int temp = cursor;
+        if (!VarDefs())
+            cursor = temp;
 
         return SUCCESS();
     }
@@ -461,8 +474,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
-        else
-            return SUCCESS();
+
+        return SUCCESS();
     }
 
     public static boolean IfExpression() {
@@ -494,7 +507,9 @@ public class Parser {
         }.getClass().getEnclosingMethod().getName() + ">");
         depth++;
 
-        Expression();
+        int temp = cursor;
+        if (!Expression())
+            cursor = temp;
 
         return SUCCESS();
     }
@@ -514,6 +529,11 @@ public class Parser {
             return FAILURE();
 
         return SUCCESS();
+    }
+
+    public static boolean isBracket(char ch) {
+        return ch
+                == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
     }
 
     enum TOKENS {LEFTPAR, RIGHTPAR, LEFTSQUAREB, RIGHTSQUAREB, LEFTCURLYB, RIGHTCURLYB, NUMBER, BOOLEAN, CHAR, STRING, DEFINE, LET, COND, IF, BEGIN, IDENTIFIER}

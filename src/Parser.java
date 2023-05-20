@@ -63,5 +63,170 @@ public class Parser {
         return ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
     }
 
+    public static boolean Expr() {
+        if (LetExpression())
+            return SUCCESS;
+        if (CondExpression())
+            return SUCCESS;
+        if (IfExpression())
+            return SUCCESS;
+        if (BeginExpression())
+            return SUCCESS;
+        if (FunCall())
+            return SUCCESS;
+
+        return FAILURE;
+    }
+
+    public static boolean FunCall() {
+        lex();
+        if (currentToken != TOKENS.IDENTIFIER)
+            return FAILURE;
+        if (!Expression())
+            return FAILURE;
+
+        return SUCCESS;
+    }
+
+    public static boolean LetExpression() {
+        lex();
+        if (currentToken != TOKENS.LET)
+            return FAILURE;
+        if (!LetExpr())
+            return FAILURE;
+
+        return SUCCESS;
+    }
+
+    public static boolean LetExpr() {
+        lex();
+        if (currentToken == TOKENS.LEFTPAR) {
+            if (!VarDefs())
+                return FAILURE;
+
+            lex();
+            if (currentToken != TOKENS.RIGHTPAR)
+                return FAILURE;
+            if (!Statements())
+                return FAILURE;
+        } else if (currentToken != TOKENS.IDENTIFIER)
+            return FAILURE;
+
+        lex();
+        if (currentToken != TOKENS.LEFTPAR)
+            return FAILURE;
+        if (!VarDefs())
+            return FAILURE;
+
+        lex();
+        if (currentToken != TOKENS.RIGHTPAR)
+            return FAILURE;
+        if (!Statements())
+            return FAILURE;
+
+        return SUCCESS;
+    }
+
+    public static boolean VarDefs() {
+        lex();
+        if (currentToken != TOKENS.LEFTPAR)
+            return FAILURE;
+
+        lex();
+        if (currentToken != TOKENS.IDENTIFIER)
+            return FAILURE;
+
+        if (!Expression())
+            return FAILURE;
+
+        lex();
+        if (currentToken != TOKENS.RIGHTPAR)
+            return FAILURE;
+        if (!VarDef())
+            return FAILURE;
+
+        return SUCCESS;
+    }
+
+    public static boolean VarDef() {
+        VarDefs();
+
+        return SUCCESS;
+    }
+
+    public static boolean CondExpression() {
+        lex();
+        if (currentToken != TOKENS.COND)
+            return FAILURE;
+        if (!CondBranches())
+            return FAILURE;
+
+        return SUCCESS;
+    }
+
+    public static boolean CondBranches() {
+        lex();
+        if (currentToken != TOKENS.LEFTPAR)
+            return FAILURE;
+        if (!Expression())
+            return FAILURE;
+        if (!Statements())
+            return FAILURE;
+
+        lex();
+        if (currentToken != TOKENS.RIGHTPAR)
+            return FAILURE;
+        if (!CondBranch())
+            return FAILURE;
+
+        return SUCCESS;
+    }
+
+    public static boolean CondBranch() {
+        lex();
+        if (currentToken != TOKENS.LEFTPAR)
+            return SUCCESS;
+        if (!Expression())
+            return FAILURE;
+        if (!Statements())
+            return FAILURE;
+
+        lex();
+        if (currentToken != TOKENS.RIGHTPAR)
+            return FAILURE;
+        else
+            return SUCCESS;
+    }
+
+    public static boolean IfExpression() {
+        lex();
+        if (currentToken != TOKENS.IF)
+            return FAILURE;
+        if (!Expression())
+            return FAILURE;
+        if (!Expression())
+            return FAILURE;
+        if (!EndExpression())
+            return FAILURE;
+
+        return SUCCESS;
+    }
+
+    public static boolean EndExpression() {
+        Expression();
+
+        return SUCCESS;
+    }
+
+    public static boolean BeginExpression() {
+        lex();
+        if (currentToken != TOKENS.BEGIN)
+            return FAILURE;
+        if (!Statements())
+            return FAILURE;
+
+        return SUCCESS;
+    }
+
     enum TOKENS {LEFTPAR, RIGHTPAR, LEFTSQUAREB, RIGHTSQUAREB, LEFTCURLYB, RIGHTCURLYB, NUMBER, BOOLEAN, CHAR, STRING, DEFINE, LET, COND, IF, BEGIN, IDENTIFIER}
 }

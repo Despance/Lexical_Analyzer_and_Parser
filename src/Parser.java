@@ -14,38 +14,39 @@ public class Parser {
     static int lineNumber = 0;
 
     static File input;
-    static FileReader code;
+    static FileReader sourceCode;
+
+    static Scanner readToken;
+    static BufferedReader readCode;
 
     public static void main(String[] args) throws FileNotFoundException {
         input = new File("output.txt");
-        code = new FileReader("input.txt");
+        sourceCode = new FileReader("input.txt");
+
+        readToken = new Scanner(input);
+        readCode = new BufferedReader(sourceCode);
     }
 
     public static boolean lex() {
         try {
-            Scanner readToken = new Scanner(input);
-            BufferedReader bf = new BufferedReader(code);
-
             int lineNumber;
-            int index;
             if (readToken.hasNext()) {
                 currentToken = TOKENS.valueOf(readToken.next());
 
                 String pos = readToken.next();
                 lineNumber = Integer.parseInt(pos.substring(0, pos.indexOf(':')));
-                index = Integer.parseInt(pos.substring(pos.indexOf(':') + 1));
             } else
                 return false;
 
             if (lineNumber != Parser.lineNumber + 1) {
-                bf.readLine();
+                readCode.readLine();
                 Parser.lineNumber++;
             }
 
             int ch;
             currentLexeme = "";
             do {
-                ch = bf.read();
+                ch = readCode.read();
                 if (ch == -1)
                     break;
                 currentLexeme += (char) ch;

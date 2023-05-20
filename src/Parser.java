@@ -5,19 +5,24 @@ import java.io.FileReader;
 import java.util.Scanner;
 
 public class Parser {
-    final static boolean SUCCESS = true;
-    final static boolean FAILURE = false;
     static int depth = 0;
-
     static TOKENS currentToken;
     static String currentLexeme;
     static int lineNumber = 0;
-
     static File input;
     static FileReader sourceCode;
-
     static Scanner readToken;
     static BufferedReader readCode;
+
+    static boolean SUCCESS() {
+        depth--;
+        return true;
+    }
+
+    static boolean FAILURE() {
+        depth--;
+        return false;
+    }
 
     public static void main(String[] args) throws FileNotFoundException {
         input = new File("output.txt");
@@ -25,6 +30,8 @@ public class Parser {
 
         readToken = new Scanner(input);
         readCode = new BufferedReader(sourceCode);
+
+        Program();
     }
 
     public static boolean lex() {
@@ -52,6 +59,10 @@ public class Parser {
                 currentLexeme += (char) ch;
             }
             while (ch != ' ' && !isBracket((char) ch));
+            for (int i = 0; i < depth; i++) {
+                System.out.print('\t');
+            }
+            System.out.println(currentToken.toString() + " (" + currentLexeme + ")");
 
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
@@ -60,104 +71,167 @@ public class Parser {
     }
 
     static boolean Program() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+
+
+        depth++;
         if (TopLevelForm())
             Program();
-        return SUCCESS;
+        return SUCCESS();
     }
 
+
     static boolean TopLevelForm() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
         lex();
         if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE;
+            return FAILURE();
         if (!SecondLevelForm())
-            return FAILURE;
+            return FAILURE();
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE;
-
-        return SUCCESS;
+            return FAILURE();
+        return SUCCESS();
     }
 
     static boolean SecondLevelForm() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         if (Definition()) {
-            return SUCCESS;
+            return SUCCESS();
         } else {
             lex();
             if (currentToken != TOKENS.LEFTPAR)
-                return FAILURE;
+                return FAILURE();
 
             if (!FunCall())
-                return FAILURE;
+                return FAILURE();
 
             lex();
             if (currentToken != TOKENS.RIGHTPAR)
-                return FAILURE;
+                return FAILURE();
 
-            return SUCCESS;
+            return SUCCESS();
         }
     }
 
     static boolean Definition() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken != TOKENS.DEFINE)
-            return FAILURE;
+            return FAILURE();
         if (!DefinitionRight())
-            return FAILURE;
-        return SUCCESS;
+            return FAILURE();
+        return SUCCESS();
     }
 
     static boolean DefinitionRight() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken == TOKENS.IDENTIFIER) {
             if (!Expression())
-                return FAILURE;
-            return SUCCESS;
+                return FAILURE();
+            return SUCCESS();
         }
 
         if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE;
+            return FAILURE();
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
-            return FAILURE;
+            return FAILURE();
         if (!ArgList())
-            return FAILURE;
-        // WE DONT TO LEX HERE
+            return FAILURE();
+        // WE DON'T TO LEX HERE
         if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE;
+            return FAILURE();
         if (!Statements())
-            return FAILURE;
+            return FAILURE();
 
-        return SUCCESS;
+        return SUCCESS();
 
     }
 
     static boolean ArgList() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken == TOKENS.IDENTIFIER)
             ArgList();
-        return SUCCESS;
+        return SUCCESS();
     }
 
     static boolean Statements() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         if (Expression())
-            return SUCCESS;
+            return SUCCESS();
 
         if (!Definition())
-            return FAILURE;
+            return FAILURE();
         if (!Statements())
-            return FAILURE;
+            return FAILURE();
 
-        return SUCCESS;
+        return SUCCESS();
 
     }
 
     static boolean Expressions() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         if (Expression())
             Expressions();
-        return SUCCESS;
+        return SUCCESS();
     }
 
     static boolean Expression() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         switch (currentToken) {
             case IDENTIFIER:
@@ -171,189 +245,275 @@ public class Parser {
             case STRING:
                 break;
             case LEFTPAR:
-                if (Expr()) {
-                    lex();
-                    if (currentToken != TOKENS.RIGHTPAR) {
-                        return FAILURE;
-                    }
-                } else return FAILURE;
+                if (!Expr())
+                    return FAILURE();
+                lex();
+                if (currentToken != TOKENS.RIGHTPAR) {
+                    return FAILURE();
+                }
+
 
                 break;
             default:
-                return FAILURE;
+                return FAILURE();
 
         }
-        return SUCCESS;
+        return SUCCESS();
     }
 
 
     public static boolean isBracket(char ch) {
-        return ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
+        return ch
+                == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
     }
 
     public static boolean Expr() {
-        if (LetExpression())
-            return SUCCESS;
-        if (CondExpression())
-            return SUCCESS;
-        if (IfExpression())
-            return SUCCESS;
-        if (BeginExpression())
-            return SUCCESS;
-        if (FunCall())
-            return SUCCESS;
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
 
-        return FAILURE;
+        if (LetExpression())
+            return SUCCESS();
+        if (CondExpression())
+            return SUCCESS();
+        if (IfExpression())
+            return SUCCESS();
+        if (BeginExpression())
+            return SUCCESS();
+        if (FunCall())
+            return SUCCESS();
+
+        return FAILURE();
     }
 
     public static boolean FunCall() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
-            return FAILURE;
-        if (!Expression())
-            return FAILURE;
+            return FAILURE();
+        if (!Expressions())
+            return FAILURE();
 
-        return SUCCESS;
+        return SUCCESS();
     }
 
     public static boolean LetExpression() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken != TOKENS.LET)
-            return FAILURE;
+            return FAILURE();
         if (!LetExpr())
-            return FAILURE;
+            return FAILURE();
 
-        return SUCCESS;
+        return SUCCESS();
     }
 
     public static boolean LetExpr() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken == TOKENS.LEFTPAR) {
             if (!VarDefs())
-                return FAILURE;
+                return FAILURE();
 
             lex();
             if (currentToken != TOKENS.RIGHTPAR)
-                return FAILURE;
+                return FAILURE();
             if (!Statements())
-                return FAILURE;
+                return FAILURE();
         } else if (currentToken != TOKENS.IDENTIFIER)
-            return FAILURE;
+            return FAILURE();
 
         lex();
         if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE;
+            return FAILURE();
         if (!VarDefs())
-            return FAILURE;
+            return FAILURE();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE;
+            return FAILURE();
         if (!Statements())
-            return FAILURE;
+            return FAILURE();
 
-        return SUCCESS;
+        return SUCCESS();
     }
 
     public static boolean VarDefs() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE;
+            return FAILURE();
 
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
-            return FAILURE;
+            return FAILURE();
 
         if (!Expression())
-            return FAILURE;
+            return FAILURE();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE;
+            return FAILURE();
         if (!VarDef())
-            return FAILURE;
+            return FAILURE();
 
-        return SUCCESS;
+        return SUCCESS();
     }
 
     public static boolean VarDef() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         VarDefs();
 
-        return SUCCESS;
+        return SUCCESS();
     }
 
     public static boolean CondExpression() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken != TOKENS.COND)
-            return FAILURE;
+            return FAILURE();
         if (!CondBranches())
-            return FAILURE;
+            return FAILURE();
 
-        return SUCCESS;
+        return SUCCESS();
     }
 
     public static boolean CondBranches() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE;
+            return FAILURE();
         if (!Expression())
-            return FAILURE;
+            return FAILURE();
         if (!Statements())
-            return FAILURE;
+            return FAILURE();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE;
+            return FAILURE();
         if (!CondBranch())
-            return FAILURE;
+            return FAILURE();
 
-        return SUCCESS;
+        return SUCCESS();
     }
 
     public static boolean CondBranch() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken != TOKENS.LEFTPAR)
-            return SUCCESS;
+            return SUCCESS();
         if (!Expression())
-            return FAILURE;
+            return FAILURE();
         if (!Statements())
-            return FAILURE;
+            return FAILURE();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE;
+            return FAILURE();
         else
-            return SUCCESS;
+            return SUCCESS();
     }
 
     public static boolean IfExpression() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken != TOKENS.IF)
-            return FAILURE;
+            return FAILURE();
         if (!Expression())
-            return FAILURE;
+            return FAILURE();
         if (!Expression())
-            return FAILURE;
+            return FAILURE();
         if (!EndExpression())
-            return FAILURE;
+            return FAILURE();
 
-        return SUCCESS;
+        return SUCCESS();
     }
 
     public static boolean EndExpression() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         Expression();
 
-        return SUCCESS;
+        return SUCCESS();
     }
 
     public static boolean BeginExpression() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        depth++;
+
         lex();
         if (currentToken != TOKENS.BEGIN)
-            return FAILURE;
+            return FAILURE();
         if (!Statements())
-            return FAILURE;
+            return FAILURE();
 
-        return SUCCESS;
+        return SUCCESS();
     }
 
     enum TOKENS {LEFTPAR, RIGHTPAR, LEFTSQUAREB, RIGHTSQUAREB, LEFTCURLYB, RIGHTCURLYB, NUMBER, BOOLEAN, CHAR, STRING, DEFINE, LET, COND, IF, BEGIN, IDENTIFIER}

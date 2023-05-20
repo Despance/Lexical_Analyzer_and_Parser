@@ -93,12 +93,15 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.LEFTPAR)
             return FAILURE();
+        print();
+
         if (!SecondLevelForm())
             return FAILURE();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
+        print();
 
         return SUCCESS();
     }
@@ -119,12 +122,15 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.LEFTPAR)
             return FAILURE();
+        print();
+
         if (!FunCall())
             return FAILURE();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
+        print();
 
         return SUCCESS();
     }
@@ -140,6 +146,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.DEFINE)
             return FAILURE();
+        print();
+
         if (!DefinitionRight())
             return FAILURE();
 
@@ -156,6 +164,7 @@ public class Parser {
 
         lex();
         if (currentToken == TOKENS.IDENTIFIER) {
+            print();
             if (!Expression())
                 return FAILURE();
 
@@ -168,12 +177,16 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
             return FAILURE();
+        print();
+
         if (!ArgList())
             return FAILURE();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
+        print();
+
         if (!Statements())
             return FAILURE();
 
@@ -191,6 +204,7 @@ public class Parser {
         int temp = cursor;
         lex();
         if (currentToken == TOKENS.IDENTIFIER) {
+            print();
             ArgList();
         } else
             cursor = temp;
@@ -247,25 +261,35 @@ public class Parser {
         lex();
         switch (currentToken) {
             case IDENTIFIER:
+                print();
                 break;
             case NUMBER:
+                print();
                 break;
             case CHAR:
+                print();
                 break;
             case BOOLEAN:
+                print();
                 break;
             case STRING:
+                print();
                 break;
             case LEFTPAR:
+                print();
+
                 if (!Expr())
                     return FAILURE();
+
                 lex();
                 if (currentToken != TOKENS.RIGHTPAR)
                     return FAILURE();
+                print();
                 break;
             default:
                 return FAILURE();
         }
+
         return SUCCESS();
     }
 
@@ -311,6 +335,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
             return FAILURE();
+        print();
+
         if (!Expressions())
             return FAILURE();
 
@@ -328,6 +354,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.LET)
             return FAILURE();
+        print();
+
         if (!LetExpr())
             return FAILURE();
 
@@ -344,12 +372,15 @@ public class Parser {
 
         lex();
         if (currentToken == TOKENS.LEFTPAR) {
+            print();
             if (!VarDefs())
                 return FAILURE();
 
             lex();
             if (currentToken != TOKENS.RIGHTPAR)
                 return FAILURE();
+            print();
+
             if (!Statements())
                 return FAILURE();
         } else if (currentToken != TOKENS.IDENTIFIER)
@@ -358,12 +389,16 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.LEFTPAR)
             return FAILURE();
+        print();
+
         if (!VarDefs())
             return FAILURE();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
+        print();
+
         if (!Statements())
             return FAILURE();
 
@@ -381,10 +416,12 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.LEFTPAR)
             return FAILURE();
+        print();
 
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
             return FAILURE();
+        print();
 
         if (!Expression())
             return FAILURE();
@@ -392,6 +429,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
+        print();
+
         if (!VarDef())
             return FAILURE();
 
@@ -424,6 +463,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.COND)
             return FAILURE();
+        print();
+
         if (!CondBranches())
             return FAILURE();
 
@@ -441,6 +482,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.LEFTPAR)
             return FAILURE();
+        print();
+
         if (!Expression())
             return FAILURE();
         if (!Statements())
@@ -449,6 +492,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
+        print();
+
         if (!CondBranch())
             return FAILURE();
 
@@ -466,6 +511,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.LEFTPAR)
             return SUCCESS();
+        print();
+
         if (!Expression())
             return FAILURE();
         if (!Statements())
@@ -474,6 +521,7 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
+        print();
 
         return SUCCESS();
     }
@@ -489,6 +537,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.IF)
             return FAILURE();
+        print();
+
         if (!Expression())
             return FAILURE();
         if (!Expression())
@@ -525,6 +575,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.BEGIN)
             return FAILURE();
+        print();
+
         if (!Statements())
             return FAILURE();
 
@@ -532,8 +584,14 @@ public class Parser {
     }
 
     public static boolean isBracket(char ch) {
-        return ch
-                == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
+        return ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
+    }
+
+    public static void print() {
+        for (int i = 0; i < depth; i++) {
+            System.out.print('\t');
+        }
+        System.out.println(currentToken.toString() + " (" + currentLexeme + ")");
     }
 
     enum TOKENS {LEFTPAR, RIGHTPAR, LEFTSQUAREB, RIGHTSQUAREB, LEFTCURLYB, RIGHTCURLYB, NUMBER, BOOLEAN, CHAR, STRING, DEFINE, LET, COND, IF, BEGIN, IDENTIFIER}

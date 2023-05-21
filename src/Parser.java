@@ -93,8 +93,10 @@ public class Parser {
 
         if (TopLevelForm())
             Program();
-        else
+        else {
             output.remove(output.size() - 1);
+            output.add(out.substring(0, out.indexOf('<')) + "\t__");
+        }
         return SUCCESS();
     }
 
@@ -279,6 +281,7 @@ public class Parser {
             Expressions();
         else {
             output.remove(output.size() - 1);
+            output.add(out.substring(0, out.indexOf('<')) + "\t__");
             cursor = temp;
         }
 
@@ -497,6 +500,7 @@ public class Parser {
         int temp = cursor;
         if (!VarDefs()) {
             output.remove(output.size() - 1);
+            output.add(out.substring(0, out.indexOf('<')) + "\t__");
             cursor = temp;
         }
 
@@ -622,6 +626,7 @@ public class Parser {
         int temp = cursor;
         if (!Expression()) {
             output.remove(output.size() - 1);
+            output.add(out.substring(0, out.indexOf('<')) + "\t__");
             cursor = temp;
         }
 

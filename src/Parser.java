@@ -27,7 +27,7 @@ public class Parser {
 
     public static void main(String[] args) throws FileNotFoundException {
         File input = new File("output.txt");
-        File sourceCode = new File("input.txt");
+        File sourceCode = new File("input1.txt");
 
         Scanner sc = new Scanner(input);
         while (sc.hasNextLine()) {
@@ -40,6 +40,10 @@ public class Parser {
         }
 
         Program();
+
+        for (String strings : output) {
+            System.out.println(strings);
+        }
     }
 
     public static boolean lex() {
@@ -78,25 +82,30 @@ public class Parser {
     }
 
     static boolean Program() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         if (TopLevelForm())
             Program();
-
+        else
+            output.remove(output.size() - 1);
         return SUCCESS();
     }
 
     static boolean TopLevelForm() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -116,11 +125,13 @@ public class Parser {
     }
 
     static boolean SecondLevelForm() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         int temp = cursor;
@@ -145,11 +156,13 @@ public class Parser {
     }
 
     static boolean Definition() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -164,11 +177,13 @@ public class Parser {
     }
 
     static boolean DefinitionRight() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -182,7 +197,7 @@ public class Parser {
 
         if (currentToken != TOKENS.LEFTPAR)
             return FAILURE();
-
+        print();
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
             return FAILURE();
@@ -203,11 +218,13 @@ public class Parser {
     }
 
     static boolean ArgList() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         int temp = cursor;
@@ -215,18 +232,23 @@ public class Parser {
         if (currentToken == TOKENS.IDENTIFIER) {
             print();
             ArgList();
-        } else
+        } else {
+            //output.remove(output.size() - 1);
+            output.add(out.substring(0, out.indexOf('<')) + "\t__");
             cursor = temp;
+        }
 
         return SUCCESS();
     }
 
     static boolean Statements() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         int temp = cursor;
@@ -243,28 +265,34 @@ public class Parser {
     }
 
     static boolean Expressions() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         int temp = cursor;
         if (Expression())
             Expressions();
-        else
+        else {
+            output.remove(output.size() - 1);
             cursor = temp;
+        }
 
         return SUCCESS();
     }
 
     static boolean Expression() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -303,42 +331,46 @@ public class Parser {
     }
 
     public static boolean Expr() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         int temp = cursor;
         if (LetExpression())
             return SUCCESS();
-
+        output.remove(output.size() - 1);
         cursor = temp;
         if (CondExpression())
             return SUCCESS();
-
+        output.remove(output.size() - 1);
         cursor = temp;
         if (IfExpression())
             return SUCCESS();
-
+        output.remove(output.size() - 1);
         cursor = temp;
         if (BeginExpression())
             return SUCCESS();
-
+        output.remove(output.size() - 1);
         cursor = temp;
         if (FunCall())
             return SUCCESS();
-
+        output.remove(output.size() - 1);
         return FAILURE();
     }
 
     public static boolean FunCall() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -353,11 +385,13 @@ public class Parser {
     }
 
     public static boolean LetExpression() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -372,11 +406,13 @@ public class Parser {
     }
 
     public static boolean LetExpr() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -394,7 +430,7 @@ public class Parser {
                 return FAILURE();
         } else if (currentToken != TOKENS.IDENTIFIER)
             return FAILURE();
-
+        print();
         lex();
         if (currentToken != TOKENS.LEFTPAR)
             return FAILURE();
@@ -415,11 +451,13 @@ public class Parser {
     }
 
     public static boolean VarDefs() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -447,26 +485,32 @@ public class Parser {
     }
 
     public static boolean VarDef() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         int temp = cursor;
-        if (!VarDefs())
+        if (!VarDefs()) {
+            output.remove(output.size() - 1);
             cursor = temp;
+        }
 
         return SUCCESS();
     }
 
     public static boolean CondExpression() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -481,11 +525,13 @@ public class Parser {
     }
 
     public static boolean CondBranches() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -510,11 +556,13 @@ public class Parser {
     }
 
     public static boolean CondBranch() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -530,17 +578,20 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             return FAILURE();
+
         print();
 
         return SUCCESS();
     }
 
     public static boolean IfExpression() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -559,26 +610,32 @@ public class Parser {
     }
 
     public static boolean EndExpression() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         int temp = cursor;
-        if (!Expression())
+        if (!Expression()) {
+            output.remove(output.size() - 1);
             cursor = temp;
+        }
 
         return SUCCESS();
     }
 
     public static boolean BeginExpression() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println("<" + new Object() {
+        out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
         depth++;
 
         lex();
@@ -597,10 +654,12 @@ public class Parser {
     }
 
     public static void print() {
+        String out = "";
         for (int i = 0; i < depth; i++) {
-            System.out.print('\t');
+            out += "\t";
         }
-        System.out.println(currentToken.toString() + " (" + currentLexeme + ")");
+        out += (currentToken.toString() + " (" + currentLexeme + ")");
+        output.add(out);
     }
 
     enum TOKENS {LEFTPAR, RIGHTPAR, LEFTSQUAREB, RIGHTSQUAREB, LEFTCURLYB, RIGHTCURLYB, NUMBER, BOOLEAN, CHAR, STRING, DEFINE, LET, COND, IF, BEGIN, IDENTIFIER}

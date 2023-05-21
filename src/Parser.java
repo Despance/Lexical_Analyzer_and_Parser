@@ -13,6 +13,8 @@ public class Parser {
     static ArrayList<String> codeLines = new ArrayList<>();
     static int cursor = 0;
 
+    static ArrayList<String> output = new ArrayList<>();
+
     static boolean SUCCESS() {
         depth--;
         return true;
@@ -56,7 +58,14 @@ public class Parser {
         char ch = line.charAt(index);
         currentLexeme = String.valueOf(line.charAt(index));
 
-        if (!isBracket(ch)) {
+        if (currentToken == TOKENS.STRING) {
+            for (int i = 1; i < line.length() - index; i++) {
+                ch = line.charAt(index + i);
+                currentLexeme += ch;
+                if (ch == '"' && currentLexeme.charAt(currentLexeme.length() - 2) != '\\')
+                    break;
+            }
+        } else if (!isBracket(ch)) {
             for (int i = 1; i < line.length() - index; i++) {
                 ch = line.charAt(index + i);
                 if (ch == ' ' || isBracket(ch))

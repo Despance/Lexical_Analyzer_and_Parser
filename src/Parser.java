@@ -34,10 +34,7 @@ public class Parser {
         }
 
         Program();
-
-        for (String strings : output) {
-            System.out.println(strings);
-        }
+        printOutput();
     }
 
     public static boolean lex() {
@@ -572,10 +569,14 @@ public class Parser {
     public static void error(String expected) {
         String errorMessage = String.format("SYNTAX ERROR [%d:%d]: %s is expected", lineNumber + 1, index + 1, expected);
         output.add(errorMessage);
+        printOutput();
+        System.exit(0);
+    }
+
+    public static void printOutput() {
         for (String strings : output) {
             System.out.println(strings);
         }
-        System.exit(0);
     }
 
     enum TOKENS {LEFTPAR, RIGHTPAR, LEFTSQUAREB, RIGHTSQUAREB, LEFTCURLYB, RIGHTCURLYB, NUMBER, BOOLEAN, CHAR, STRING, DEFINE, LET, COND, IF, BEGIN, IDENTIFIER}

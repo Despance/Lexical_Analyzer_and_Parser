@@ -9,21 +9,15 @@ public class Parser {
     static TOKENS currentToken;
     static String currentLexeme;
 
+    static int lineNumber;
+    static int index;
+
     static ArrayList<String> tokens = new ArrayList<>();
     static ArrayList<String> codeLines = new ArrayList<>();
     static int cursor = 0;
 
     static ArrayList<String> output = new ArrayList<>();
 
-    static boolean SUCCESS() {
-        depth--;
-        return true;
-    }
-
-    static boolean FAILURE() {
-        depth--;
-        return false;
-    }
 
     public static void main(String[] args) throws FileNotFoundException {
         File input = new File("output.txt");
@@ -53,8 +47,8 @@ public class Parser {
         String[] tokenInfo = tokens.get(cursor).split(" ");
         currentToken = TOKENS.valueOf(tokenInfo[0]);
 
-        int lineNumber = Integer.parseInt(tokenInfo[1].substring(0, tokenInfo[1].indexOf(':'))) - 1;
-        int index = Integer.parseInt(tokenInfo[1].substring(tokenInfo[1].indexOf(':') + 1)) - 1;
+        lineNumber = Integer.parseInt(tokenInfo[1].substring(0, tokenInfo[1].indexOf(':'))) - 1;
+        index = Integer.parseInt(tokenInfo[1].substring(tokenInfo[1].indexOf(':') + 1)) - 1;
 
         cursor++;
 
@@ -77,50 +71,10 @@ public class Parser {
                 currentLexeme += ch;
             }
         }
-
         return true;
     }
 
-    static boolean Program() {
-        String out = addTab();
-        out += ("<" + new Object() {
-        }.getClass().getEnclosingMethod().getName() + ">");
-        output.add(out);
-        depth++;
-
-        if (TopLevelForm())
-            Program();
-        else {
-            output.remove(output.size() - 1);
-            output.add(out.substring(0, out.indexOf('<')) + "\t__");
-        }
-        return SUCCESS();
-    }
-
-    static boolean TopLevelForm() {
-        String out = addTab();
-        out += ("<" + new Object() {
-        }.getClass().getEnclosingMethod().getName() + ">");
-        output.add(out);
-        depth++;
-
-        lex();
-        if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE();
-        addOutput();
-
-        if (!SecondLevelForm())
-            return FAILURE();
-
-        lex();
-        if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE();
-        addOutput();
-
-        return SUCCESS();
-    }
-
-    static boolean SecondLevelForm() {
+    public static void Program() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -128,27 +82,65 @@ public class Parser {
         depth++;
 
         int temp = cursor;
-        if (Definition())
-            return SUCCESS();
-
+        lex();
         cursor = temp;
+        if (currentToken == TOKENS.LEFTPAR) {
+            TopLevelForm();
+            Program();
+        } else
+            output.add(out.substring(0, out.indexOf('<')) + "\t__");
+
+        depth--;
+    }
+
+    public static void TopLevelForm() {
+        String out = addTab();
+        out += ("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
+        depth++;
+
         lex();
         if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE();
+            error("'('");
         addOutput();
-
-        if (!FunCall())
-            return FAILURE();
+        SecondLevelForm();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE();
+            error("')'");
         addOutput();
 
-        return SUCCESS();
+        depth--;
     }
 
-    static boolean Definition() {
+    public static void SecondLevelForm() {
+        String out = addTab();
+        out += ("<" + new Object() {
+        }.getClass().getEnclosingMethod().getName() + ">");
+        output.add(out);
+        depth++;
+
+        int temp = cursor;
+        lex();
+        cursor = temp;
+        if (currentToken == TOKENS.DEFINE) {
+            Definition();
+        } else if (currentToken == TOKENS.LEFTPAR) {
+            addOutput();
+            FunCall();
+
+            lex();
+            if (currentToken != TOKENS.RIGHTPAR)
+                error("')'");
+            addOutput();
+        } else
+            error("'DEFINE' or '('");
+
+        depth--;
+    }
+
+    public static void Definition() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -157,16 +149,14 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.DEFINE)
-            return FAILURE();
+            error("'DEFINE'");
         addOutput();
+        DefinitionRight();
 
-        if (!DefinitionRight())
-            return FAILURE();
-
-        return SUCCESS();
+        depth--;
     }
 
-    static boolean DefinitionRight() {
+    public static void DefinitionRight() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -176,36 +166,30 @@ public class Parser {
         lex();
         if (currentToken == TOKENS.IDENTIFIER) {
             addOutput();
-            if (!Expression())
-                return FAILURE();
+            Expression();
+            depth--;
+            return;
+        } else if (currentToken == TOKENS.LEFTPAR) {
+            addOutput();
 
-            return SUCCESS();
-        }
+            lex();
+            if (currentToken != TOKENS.IDENTIFIER)
+                error("'IDENTIFIER'");
+            addOutput();
+            ArgList();
 
-        if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE();
-        addOutput();
+            lex();
+            if (currentToken != TOKENS.RIGHTPAR)
+                error("')'");
+            addOutput();
+            Statements();
+        } else
+            error("'IDENTIFIER' or '('");
 
-        lex();
-        if (currentToken != TOKENS.IDENTIFIER)
-            return FAILURE();
-        addOutput();
-
-        if (!ArgList())
-            return FAILURE();
-
-        lex();
-        if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE();
-        addOutput();
-
-        if (!Statements())
-            return FAILURE();
-
-        return SUCCESS();
+        depth--;
     }
 
-    static boolean ArgList() {
+    public static void ArgList() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -221,11 +205,10 @@ public class Parser {
             output.add(out.substring(0, out.indexOf('<')) + "\t__");
             cursor = temp;
         }
-
-        return SUCCESS();
+        depth--;
     }
 
-    static boolean Statements() {
+    public static void Statements() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -233,19 +216,20 @@ public class Parser {
         depth++;
 
         int temp = cursor;
-        if (Expression())
-            return SUCCESS();
-
+        lex();
         cursor = temp;
-        if (!Definition())
-            return FAILURE();
-        if (!Statements())
-            return FAILURE();
+        if (currentToken == TOKENS.IDENTIFIER || currentToken == TOKENS.NUMBER || currentToken == TOKENS.CHAR
+                || currentToken == TOKENS.BOOLEAN || currentToken == TOKENS.STRING || currentToken == TOKENS.LEFTPAR)
+            Expression();
+        else if (currentToken == TOKENS.DEFINE)
+            Definition();
+        else
+            error("'IDENTIFIER' or 'NUMBER' or 'CHAR' or 'BOOLEAN' or 'STRING' or '(' or 'DEFINE'");
 
-        return SUCCESS();
+        depth--;
     }
 
-    static boolean Expressions() {
+    public static void Expressions() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -253,18 +237,19 @@ public class Parser {
         depth++;
 
         int temp = cursor;
-        if (Expression())
+        lex();
+        cursor = temp;
+        if (currentToken == TOKENS.IDENTIFIER || currentToken == TOKENS.NUMBER || currentToken == TOKENS.CHAR
+                || currentToken == TOKENS.BOOLEAN || currentToken == TOKENS.STRING || currentToken == TOKENS.LEFTPAR) {
+            Expression();
             Expressions();
-        else {
-            output.remove(output.size() - 1);
+        } else {
             output.add(out.substring(0, out.indexOf('<')) + "\t__");
-            cursor = temp;
         }
-
-        return SUCCESS();
+        depth--;
     }
 
-    static boolean Expression() {
+    public static void Expression() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -290,23 +275,21 @@ public class Parser {
                 break;
             case LEFTPAR:
                 addOutput();
-
-                if (!Expr())
-                    return FAILURE();
+                Expr();
 
                 lex();
                 if (currentToken != TOKENS.RIGHTPAR)
-                    return FAILURE();
+                    error("')'");
                 addOutput();
                 break;
             default:
-                return FAILURE();
+                error("'IDENTIFIER' or 'NUMBER' or 'CHAR' or 'BOOLEAN' or 'STRING' or 'LEFTPAR'");
+                break;
         }
-
-        return SUCCESS();
+        depth--;
     }
 
-    public static boolean Expr() {
+    public static void Expr() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -314,34 +297,33 @@ public class Parser {
         depth++;
 
         int temp = cursor;
-        if (LetExpression())
-            return SUCCESS();
-        output.remove(output.size() - 1);
-
+        lex();
         cursor = temp;
-        if (CondExpression())
-            return SUCCESS();
-        output.remove(output.size() - 1);
 
-        cursor = temp;
-        if (IfExpression())
-            return SUCCESS();
-        output.remove(output.size() - 1);
-
-        cursor = temp;
-        if (BeginExpression())
-            return SUCCESS();
-        output.remove(output.size() - 1);
-
-        cursor = temp;
-        if (FunCall())
-            return SUCCESS();
-        output.remove(output.size() - 1);
-
-        return FAILURE();
+        switch (currentToken) {
+            case LET:
+                LetExpression();
+                break;
+            case COND:
+                CondExpression();
+                break;
+            case IF:
+                IfExpression();
+                break;
+            case BEGIN:
+                BeginExpression();
+                break;
+            case IDENTIFIER:
+                FunCall();
+                break;
+            default:
+                error("'LET' or 'COND' or 'IF' or 'BEGIN' or 'IDENTIFIER'");
+                break;
+        }
+        depth--;
     }
 
-    public static boolean FunCall() {
+    public static void FunCall() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -350,16 +332,14 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
-            return FAILURE();
+            error("'IDENTIFIER'");
         addOutput();
+        Expressions();
 
-        if (!Expressions())
-            return FAILURE();
-
-        return SUCCESS();
+        depth--;
     }
 
-    public static boolean LetExpression() {
+    public static void LetExpression() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -368,16 +348,14 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.LET)
-            return FAILURE();
+            error("'LET'");
         addOutput();
+        LetExpr();
 
-        if (!LetExpr())
-            return FAILURE();
-
-        return SUCCESS();
+        depth--;
     }
 
-    public static boolean LetExpr() {
+    public static void LetExpr() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -387,40 +365,34 @@ public class Parser {
         lex();
         if (currentToken == TOKENS.LEFTPAR) {
             addOutput();
-            if (!VarDefs())
-                return FAILURE();
+            VarDefs();
 
             lex();
             if (currentToken != TOKENS.RIGHTPAR)
-                return FAILURE();
+                error("')'");
+            addOutput();
+            Statements();
+        } else if (currentToken == TOKENS.IDENTIFIER) {
             addOutput();
 
-            if (!Statements())
-                return FAILURE();
-        } else if (currentToken != TOKENS.IDENTIFIER)
-            return FAILURE();
-        addOutput();
+            lex();
+            if (currentToken != TOKENS.LEFTPAR)
+                error("'('");
+            addOutput();
+            VarDefs();
 
-        lex();
-        if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE();
-        addOutput();
+            lex();
+            if (currentToken != TOKENS.RIGHTPAR)
+                error("')'");
+            addOutput();
+            Statements();
+        } else
+            error("'(' or 'IDENTIFIER'");
 
-        if (!VarDefs())
-            return FAILURE();
-
-        lex();
-        if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE();
-        addOutput();
-
-        if (!Statements())
-            return FAILURE();
-
-        return SUCCESS();
+        depth--;
     }
 
-    public static boolean VarDefs() {
+    public static void VarDefs() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -429,29 +401,25 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE();
+            error("'('");
         addOutput();
 
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
-            return FAILURE();
+            error("'IDENTIFIER'");
         addOutput();
-
-        if (!Expression())
-            return FAILURE();
+        Expression();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE();
+            error("')'");
         addOutput();
+        VarDef();
 
-        if (!VarDef())
-            return FAILURE();
-
-        return SUCCESS();
+        depth--;
     }
 
-    public static boolean VarDef() {
+    public static void VarDef() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -459,16 +427,17 @@ public class Parser {
         depth++;
 
         int temp = cursor;
-        if (!VarDefs()) {
-            output.remove(output.size() - 1);
+        lex();
+        cursor = temp;
+        if (currentToken == TOKENS.LEFTPAR) {
+            VarDefs();
+        } else {
             output.add(out.substring(0, out.indexOf('<')) + "\t__");
-            cursor = temp;
         }
-
-        return SUCCESS();
+        depth--;
     }
 
-    public static boolean CondExpression() {
+    public static void CondExpression() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -477,16 +446,14 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.COND)
-            return FAILURE();
+            error("'COND'");
         addOutput();
+        CondBranches();
 
-        if (!CondBranches())
-            return FAILURE();
-
-        return SUCCESS();
+        depth--;
     }
 
-    public static boolean CondBranches() {
+    public static void CondBranches() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -495,26 +462,21 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.LEFTPAR)
-            return FAILURE();
+            error("'('");
         addOutput();
-
-        if (!Expression())
-            return FAILURE();
-        if (!Statements())
-            return FAILURE();
+        Expression();
+        Statements();
 
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE();
+            error("')'");
         addOutput();
+        CondBranch();
 
-        if (!CondBranch())
-            return FAILURE();
-
-        return SUCCESS();
+        depth--;
     }
 
-    public static boolean CondBranch() {
+    public static void CondBranch() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -522,24 +484,22 @@ public class Parser {
         depth++;
 
         lex();
-        if (currentToken != TOKENS.LEFTPAR)
-            return SUCCESS();
-        addOutput();
+        if (currentToken == TOKENS.LEFTPAR) {
+            addOutput();
+            Expression();
+            Statements();
 
-        if (!Expression())
-            return FAILURE();
-        if (!Statements())
-            return FAILURE();
-
-        lex();
-        if (currentToken != TOKENS.RIGHTPAR)
-            return FAILURE();
-        addOutput();
-
-        return SUCCESS();
+            lex();
+            if (currentToken != TOKENS.RIGHTPAR)
+                error("')'");
+            addOutput();
+        } else {
+            output.add(out.substring(0, out.indexOf('<')) + "\t__");
+        }
+        depth--;
     }
 
-    public static boolean IfExpression() {
+    public static void IfExpression() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -548,20 +508,16 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.IF)
-            return FAILURE();
+            error("'IF'");
         addOutput();
+        Expression();
+        Expression();
+        EndExpression();
 
-        if (!Expression())
-            return FAILURE();
-        if (!Expression())
-            return FAILURE();
-        if (!EndExpression())
-            return FAILURE();
-
-        return SUCCESS();
+        depth--;
     }
 
-    public static boolean EndExpression() {
+    public static void EndExpression() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -569,16 +525,18 @@ public class Parser {
         depth++;
 
         int temp = cursor;
-        if (!Expression()) {
-            output.remove(output.size() - 1);
+        lex();
+        cursor = temp;
+        if (currentToken == TOKENS.IDENTIFIER || currentToken == TOKENS.NUMBER || currentToken == TOKENS.CHAR
+                || currentToken == TOKENS.BOOLEAN || currentToken == TOKENS.STRING || currentToken == TOKENS.LEFTPAR)
+            Expression();
+        else {
             output.add(out.substring(0, out.indexOf('<')) + "\t__");
-            cursor = temp;
         }
-
-        return SUCCESS();
+        depth--;
     }
 
-    public static boolean BeginExpression() {
+    public static void BeginExpression() {
         String out = addTab();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
@@ -587,13 +545,11 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.BEGIN)
-            return FAILURE();
+            error("'BEGIN'");
         addOutput();
+        Statements();
 
-        if (!Statements())
-            return FAILURE();
-
-        return SUCCESS();
+        depth--;
     }
 
     public static boolean isBracket(char ch) {
@@ -611,6 +567,15 @@ public class Parser {
         for (int i = 0; i < depth; i++)
             out += "\t";
         return out;
+    }
+
+    public static void error(String expected) {
+        String errorMessage = String.format("SYNTAX ERROR [%d:%d]: %s is expected", lineNumber + 1, index + 1, expected);
+        output.add(errorMessage);
+        for (String strings : output) {
+            System.out.println(strings);
+        }
+        System.exit(0);
     }
 
     enum TOKENS {LEFTPAR, RIGHTPAR, LEFTSQUAREB, RIGHTSQUAREB, LEFTCURLYB, RIGHTCURLYB, NUMBER, BOOLEAN, CHAR, STRING, DEFINE, LET, COND, IF, BEGIN, IDENTIFIER}

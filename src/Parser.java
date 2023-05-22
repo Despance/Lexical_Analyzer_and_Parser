@@ -37,9 +37,12 @@ public class Parser {
         printOutput();
     }
 
-    public static boolean lex() {
-        if (cursor >= tokens.size())
-            return false;
+    public static void lex() {
+        if (cursor >= tokens.size()) {
+            currentToken = TOKENS.EOF;
+            currentLexeme = "EOF";
+            return;
+        }
 
         String[] tokenInfo = tokens.get(cursor).split(" ");
         currentToken = TOKENS.valueOf(tokenInfo[0]);
@@ -68,7 +71,6 @@ public class Parser {
                 currentLexeme += ch;
             }
         }
-        return true;
     }
 
     public static void Program() {
@@ -579,5 +581,5 @@ public class Parser {
         }
     }
 
-    enum TOKENS {LEFTPAR, RIGHTPAR, LEFTSQUAREB, RIGHTSQUAREB, LEFTCURLYB, RIGHTCURLYB, NUMBER, BOOLEAN, CHAR, STRING, DEFINE, LET, COND, IF, BEGIN, IDENTIFIER}
+    enum TOKENS {LEFTPAR, RIGHTPAR, LEFTSQUAREB, RIGHTSQUAREB, LEFTCURLYB, RIGHTCURLYB, NUMBER, BOOLEAN, CHAR, STRING, DEFINE, LET, COND, IF, BEGIN, IDENTIFIER, EOF}
 }

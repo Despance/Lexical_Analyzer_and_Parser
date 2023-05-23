@@ -44,8 +44,14 @@ public class Parser {
         while (sc.hasNextLine()) {
             codeLines.add(sc.nextLine());
         }
+
         outputFile = new FileWriter(new File("output.txt"));
-        Program();
+
+        if (tokens.get(tokens.size() - 1).split(" ")[0].equals("LEXICAL"))
+            output.add(tokens.get(tokens.size() - 1));
+        else
+            Program();
+
         printOutput();
     }
 
@@ -146,7 +152,7 @@ public class Parser {
                 error("')'");
             addOutput();
         } else
-            error("'DEFINE' or '('");
+            error("'define' or '('");
 
         depth--;
     }
@@ -160,7 +166,7 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.DEFINE)
-            error("'DEFINE'");
+            error("'define'");
         addOutput();
         DefinitionRight();
 
@@ -185,7 +191,7 @@ public class Parser {
 
             lex();
             if (currentToken != TOKENS.IDENTIFIER)
-                error("'IDENTIFIER'");
+                error("'identifier'");
             addOutput();
             ArgList();
 
@@ -195,7 +201,7 @@ public class Parser {
             addOutput();
             Statements();
         } else
-            error("'IDENTIFIER' or '('");
+            error("'identifier' or '('");
 
         depth--;
     }
@@ -235,7 +241,7 @@ public class Parser {
         else if (currentToken == TOKENS.DEFINE)
             Definition();
         else
-            error("'IDENTIFIER' or 'NUMBER' or 'CHAR' or 'BOOLEAN' or 'STRING' or '(' or 'DEFINE'");
+            error("'identifier' or 'number' or 'char' or 'boolean' or 'string' or '(' or 'define'");
 
         depth--;
     }
@@ -286,7 +292,7 @@ public class Parser {
                 addOutput();
                 break;
             default:
-                error("'IDENTIFIER' or 'NUMBER' or 'CHAR' or 'BOOLEAN' or 'STRING' or 'LEFTPAR'");
+                error("'identifier' or 'number' or 'char' or 'boolean' or 'string' or '('");
                 break;
         }
         depth--;
@@ -320,7 +326,7 @@ public class Parser {
                 FunCall();
                 break;
             default:
-                error("'LET' or 'COND' or 'IF' or 'BEGIN' or 'IDENTIFIER'");
+                error("'let' or 'cond' or 'if' or 'begin' or 'identifier'");
                 break;
         }
         depth--;
@@ -335,7 +341,7 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
-            error("'IDENTIFIER'");
+            error("'identifier'");
         addOutput();
         Expressions();
 
@@ -351,7 +357,7 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.LET)
-            error("'LET'");
+            error("'let'");
         addOutput();
         LetExpr();
 
@@ -390,7 +396,7 @@ public class Parser {
             addOutput();
             Statements();
         } else
-            error("'(' or 'IDENTIFIER'");
+            error("'(' or 'identifier'");
 
         depth--;
     }
@@ -409,7 +415,7 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.IDENTIFIER)
-            error("'IDENTIFIER'");
+            error("'identifier'");
         addOutput();
         Expression();
 
@@ -449,7 +455,7 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.COND)
-            error("'COND'");
+            error("'cond'");
         addOutput();
         CondBranches();
 
@@ -511,7 +517,7 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.IF)
-            error("'IF'");
+            error("'if'");
         addOutput();
         Expression();
         Expression();
@@ -548,7 +554,7 @@ public class Parser {
 
         lex();
         if (currentToken != TOKENS.BEGIN)
-            error("'BEGIN'");
+            error("'begin'");
         addOutput();
         Statements();
 

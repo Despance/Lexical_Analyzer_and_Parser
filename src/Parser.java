@@ -1,5 +1,6 @@
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -15,13 +16,24 @@ public class Parser {
     static ArrayList<String> tokens = new ArrayList<>();
     static ArrayList<String> codeLines = new ArrayList<>();
     static int cursor = 0;
-
     static ArrayList<String> output = new ArrayList<>();
+    static FileWriter outputFile;
 
+    public static void main(String[] args) throws IOException {
 
-    public static void main(String[] args) throws FileNotFoundException {
-        File input = new File("output.txt");
-        File sourceCode = new File("input.txt");
+        String filePath = "input.txt";
+
+        if (args.length == 0) {
+            System.out.print("Enter the filepath: ");
+            filePath = new Scanner(System.in).nextLine();
+        } else if (!args[0].isEmpty()) {
+            filePath = args[0];
+        }
+
+        Lexical_Analyzer.main(new String[]{filePath});
+
+        File input = new File("tokens.txt");
+        File sourceCode = new File(filePath);
 
         Scanner sc = new Scanner(input);
         while (sc.hasNextLine()) {
@@ -32,7 +44,7 @@ public class Parser {
         while (sc.hasNextLine()) {
             codeLines.add(sc.nextLine());
         }
-
+        outputFile = new FileWriter(new File("output.txt"));
         Program();
         printOutput();
     }
@@ -74,7 +86,7 @@ public class Parser {
     }
 
     public static void Program() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -87,13 +99,13 @@ public class Parser {
             TopLevelForm();
             Program();
         } else
-            output.add(out.substring(0, out.indexOf('<')) + "\t__");
+            output.add(out.substring(0, out.indexOf('<')) + " __");
 
         depth--;
     }
 
     public static void TopLevelForm() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -114,7 +126,7 @@ public class Parser {
     }
 
     public static void SecondLevelForm() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -140,7 +152,7 @@ public class Parser {
     }
 
     public static void Definition() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -156,7 +168,7 @@ public class Parser {
     }
 
     public static void DefinitionRight() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -189,7 +201,7 @@ public class Parser {
     }
 
     public static void ArgList() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -201,14 +213,14 @@ public class Parser {
             addOutput();
             ArgList();
         } else {
-            output.add(out.substring(0, out.indexOf('<')) + "\t__");
+            output.add(out.substring(0, out.indexOf('<')) + " __");
             cursor = temp;
         }
         depth--;
     }
 
     public static void Statements() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -229,7 +241,7 @@ public class Parser {
     }
 
     public static void Expressions() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -243,13 +255,13 @@ public class Parser {
             Expression();
             Expressions();
         } else {
-            output.add(out.substring(0, out.indexOf('<')) + "\t__");
+            output.add(out.substring(0, out.indexOf('<')) + " __");
         }
         depth--;
     }
 
     public static void Expression() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -258,17 +270,9 @@ public class Parser {
         lex();
         switch (currentToken) {
             case IDENTIFIER:
-                addOutput();
-                break;
             case NUMBER:
-                addOutput();
-                break;
             case CHAR:
-                addOutput();
-                break;
             case BOOLEAN:
-                addOutput();
-                break;
             case STRING:
                 addOutput();
                 break;
@@ -289,7 +293,7 @@ public class Parser {
     }
 
     public static void Expr() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -323,7 +327,7 @@ public class Parser {
     }
 
     public static void FunCall() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -339,7 +343,7 @@ public class Parser {
     }
 
     public static void LetExpression() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -355,7 +359,7 @@ public class Parser {
     }
 
     public static void LetExpr() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -392,7 +396,7 @@ public class Parser {
     }
 
     public static void VarDefs() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -419,7 +423,7 @@ public class Parser {
     }
 
     public static void VarDef() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -431,13 +435,13 @@ public class Parser {
         if (currentToken == TOKENS.LEFTPAR) {
             VarDefs();
         } else {
-            output.add(out.substring(0, out.indexOf('<')) + "\t__");
+            output.add(out.substring(0, out.indexOf('<')) + " __");
         }
         depth--;
     }
 
     public static void CondExpression() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -453,7 +457,7 @@ public class Parser {
     }
 
     public static void CondBranches() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -476,7 +480,7 @@ public class Parser {
     }
 
     public static void CondBranch() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -493,13 +497,13 @@ public class Parser {
                 error("')'");
             addOutput();
         } else {
-            output.add(out.substring(0, out.indexOf('<')) + "\t__");
+            output.add(out.substring(0, out.indexOf('<')) + " __");
         }
         depth--;
     }
 
     public static void IfExpression() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -517,7 +521,7 @@ public class Parser {
     }
 
     public static void EndExpression() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -530,13 +534,13 @@ public class Parser {
                 || currentToken == TOKENS.BOOLEAN || currentToken == TOKENS.STRING || currentToken == TOKENS.LEFTPAR)
             Expression();
         else {
-            output.add(out.substring(0, out.indexOf('<')) + "\t__");
+            output.add(out.substring(0, out.indexOf('<')) + " __");
         }
         depth--;
     }
 
     public static void BeginExpression() {
-        String out = addTab();
+        String out = addSpace();
         out += ("<" + new Object() {
         }.getClass().getEnclosingMethod().getName() + ">");
         output.add(out);
@@ -556,15 +560,15 @@ public class Parser {
     }
 
     public static void addOutput() {
-        String out = addTab();
+        String out = addSpace();
         out += (currentToken.toString() + " (" + currentLexeme + ")");
         output.add(out);
     }
 
-    public static String addTab() {
+    public static String addSpace() {
         String out = "";
         for (int i = 0; i < depth; i++)
-            out += "\t";
+            out += " ";
         return out;
     }
 
@@ -578,6 +582,16 @@ public class Parser {
     public static void printOutput() {
         for (String strings : output) {
             System.out.println(strings);
+            try {
+                outputFile.write(strings + "\n");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        try {
+            outputFile.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

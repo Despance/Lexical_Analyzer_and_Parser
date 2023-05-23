@@ -45,7 +45,7 @@ public class Lexical_Analyzer {
             }
 
             //Create the output file
-            File outputFile = new File("output.txt");
+            File outputFile = new File("tokens.txt");
             FileWriter writer = new FileWriter(outputFile);
 
             for (int i = 0; i < output.size(); i++) {
@@ -54,11 +54,13 @@ public class Lexical_Analyzer {
             }
             writer.close();
 
+            /*
             //Writing the output to the console
             Scanner fileReader = new Scanner(outputFile);
             while (fileReader.hasNextLine())
                 System.out.println(fileReader.nextLine());
             fileReader.close();
+             */
 
         } catch (Exception ex) {
             System.out.println(ex.getMessage());

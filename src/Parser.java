@@ -17,6 +17,7 @@ public class Parser {
     static ArrayList<String> codeLines = new ArrayList<>();
     static int cursor = 0;
     static ArrayList<String> output = new ArrayList<>();
+
     static FileWriter outputFile;
 
     public static void main(String[] args) throws IOException {

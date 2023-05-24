@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Parser {
-    static int depth = 0; // stores how many whitesapces to add before printing
+    static int depth = 0; // stores how many whitespaces to add before printing
 
     static TOKENS currentToken; // stores the current token
     static String currentLexeme; // stores the current lexeme
@@ -66,6 +66,7 @@ public class Parser {
         else
             Program();
 
+        // print the output that constructed while parsing and write it to output.txt
         printOutput();
     }
 
@@ -400,6 +401,7 @@ public class Parser {
         depth--;
     }
 
+    //<FunCall> -> IDENTIFIER <Expressions>
     public static void FunCall() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -408,6 +410,7 @@ public class Parser {
         depth++;
 
         lex();
+        // if the next token is not 'IDENTIFIER', throw an error
         if (currentToken != TOKENS.IDENTIFIER)
             error("'identifier'");
         addOutput();
@@ -416,6 +419,7 @@ public class Parser {
         depth--;
     }
 
+    //<LetExpression> -> LET <LetExpr>
     public static void LetExpression() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -424,6 +428,7 @@ public class Parser {
         depth++;
 
         lex();
+        // if the next token is not 'LET', throw an error
         if (currentToken != TOKENS.LET)
             error("'let'");
         addOutput();
@@ -432,6 +437,7 @@ public class Parser {
         depth--;
     }
 
+    //<LetExpr> -> ( <VarDefs> <Statements> ) | IDENTIFIER ( <VarDefs> <Statements> )
     public static void LetExpr() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -440,6 +446,7 @@ public class Parser {
         depth++;
 
         lex();
+        // if the next token is '(', it means the rule is <LetExpr> -> ( <VarDefs> <Statements> )
         if (currentToken == TOKENS.LEFTPAR) {
             addOutput();
             VarDefs();
@@ -449,7 +456,9 @@ public class Parser {
                 error("')'");
             addOutput();
             Statements();
-        } else if (currentToken == TOKENS.IDENTIFIER) {
+        }
+        // if the next token is 'IDENTIFIER', it means the rule is <LetExpr> -> IDENTIFIER ( <VarDefs> <Statements> )
+        else if (currentToken == TOKENS.IDENTIFIER) {
             addOutput();
 
             lex();
@@ -463,12 +472,15 @@ public class Parser {
                 error("')'");
             addOutput();
             Statements();
-        } else
+        }
+        // if the next token is not one of the above, throw an error
+        else
             error("'(' or 'identifier'");
 
         depth--;
     }
 
+    //<VarDefs> -> ( IDENTIFIER <Expression> ) <VarDef>
     public static void VarDefs() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -476,18 +488,22 @@ public class Parser {
         output.add(out);
         depth++;
 
+
         lex();
+        // if the next token is not '(', throw an error
         if (currentToken != TOKENS.LEFTPAR)
             error("'('");
         addOutput();
 
         lex();
+        // if the next token is not 'IDENTIFIER', throw an error
         if (currentToken != TOKENS.IDENTIFIER)
             error("'identifier'");
         addOutput();
         Expression();
 
         lex();
+        // if the next token is not ')', throw an error
         if (currentToken != TOKENS.RIGHTPAR)
             error("')'");
         addOutput();
@@ -496,6 +512,7 @@ public class Parser {
         depth--;
     }
 
+    //<VarDef> -> ε | <VarDefs>
     public static void VarDef() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -503,17 +520,22 @@ public class Parser {
         output.add(out);
         depth++;
 
+        // save the current cursor position to restore it later
         int temp = cursor;
         lex();
         cursor = temp;
+
+        // if the next token is '(', it means the rule is <VarDef> -> <VarDefs>
         if (currentToken == TOKENS.LEFTPAR) {
             VarDefs();
         } else {
+            // if the next token is not '(', it means the rule is <VarDef> -> ε
             output.add(out.substring(0, out.indexOf('<')) + " __");
         }
         depth--;
     }
 
+    //CondExpression -> COND <CondBranches>
     public static void CondExpression() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -522,14 +544,17 @@ public class Parser {
         depth++;
 
         lex();
+        // if the current token is not 'COND', throw an error
         if (currentToken != TOKENS.COND)
             error("'cond'");
-        addOutput();
-        CondBranches();
+
+        addOutput();//add current token to output
+        CondBranches(); // call CondBranches
 
         depth--;
     }
 
+    //CondBranches -> ( <Expression> <Statements> ) <CondBranch>
     public static void CondBranches() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -538,6 +563,7 @@ public class Parser {
         depth++;
 
         lex();
+        // if the next token is not '(', throw an error
         if (currentToken != TOKENS.LEFTPAR)
             error("'('");
         addOutput();
@@ -545,6 +571,7 @@ public class Parser {
         Statements();
 
         lex();
+        // if the next token is not ')', throw an error
         if (currentToken != TOKENS.RIGHTPAR)
             error("')'");
         addOutput();
@@ -553,6 +580,7 @@ public class Parser {
         depth--;
     }
 
+    //CondBranch -> ε | (<Expression> <Statements>)
     public static void CondBranch() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -561,8 +589,10 @@ public class Parser {
         depth++;
 
         lex();
+        //if the next token is '(', it means the rule is CondBranch -> (<Expression> <Statements>)
         if (currentToken == TOKENS.LEFTPAR) {
             addOutput();
+            //call the grammar rule functions
             Expression();
             Statements();
 
@@ -571,11 +601,13 @@ public class Parser {
                 error("')'");
             addOutput();
         } else {
+            //if the next token is not '(', it means the rule is CondBranch -> ε
             output.add(out.substring(0, out.indexOf('<')) + " __");
         }
         depth--;
     }
 
+    //IfExpression -> IF <Expression> <Expression> <EndExpression>
     public static void IfExpression() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -586,7 +618,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.IF)
             error("'if'");
-        addOutput();
+        addOutput();//add current token to output
+        //call the grammar rule functions
         Expression();
         Expression();
         EndExpression();
@@ -594,6 +627,7 @@ public class Parser {
         depth--;
     }
 
+    //<EndExpression> -> ε | <Expression>
     public static void EndExpression() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -601,9 +635,12 @@ public class Parser {
         output.add(out);
         depth++;
 
+        //keep the current token in a temp variable to restore it later
         int temp = cursor;
         lex();
         cursor = temp;
+
+        //check if the current token is an identifier, number, char, boolean, string, or left parenthesis
         if (currentToken == TOKENS.IDENTIFIER || currentToken == TOKENS.NUMBER || currentToken == TOKENS.CHAR
                 || currentToken == TOKENS.BOOLEAN || currentToken == TOKENS.STRING || currentToken == TOKENS.LEFTPAR)
             Expression();
@@ -613,6 +650,7 @@ public class Parser {
         depth--;
     }
 
+    //BeginExpression -> BEGIN <Statements>
     public static void BeginExpression() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -621,24 +659,26 @@ public class Parser {
         depth++;
 
         lex();
-        if (currentToken != TOKENS.BEGIN)
+        if (currentToken != TOKENS.BEGIN)//check if the current token is 'begin'
             error("'begin'");
-        addOutput();
-        Statements();
-
+        addOutput();//print the token and lexeme
+        Statements();//call the Statements function
         depth--;
     }
 
+    // check if the current character is a bracket
     public static boolean isBracket(char ch) {
         return ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
     }
 
+    // add the current token and lexeme to the output
     public static void addOutput() {
         String out = addSpace();
         out += (currentToken.toString() + " (" + currentLexeme + ")");
         output.add(out);
     }
 
+    //add space to the output according to the depth of the function call.
     public static String addSpace() {
         String out = "";
         for (int i = 0; i < depth; i++)
@@ -646,13 +686,16 @@ public class Parser {
         return out;
     }
 
+    // print the error message and exit the program
     public static void error(String expected) {
         String errorMessage = String.format("SYNTAX ERROR [%d:%d]: %s is expected", lineNumber + 1, index + 1, expected);
         output.add(errorMessage);
+        //print the output before exiting because of the error.
         printOutput();
         System.exit(0);
     }
 
+    //print the output to the console and the output file
     public static void printOutput() {
         for (String strings : output) {
             System.out.println(strings);
@@ -669,5 +712,6 @@ public class Parser {
         }
     }
 
+    // define all tokens for simplicity
     enum TOKENS {LEFTPAR, RIGHTPAR, LEFTSQUAREB, RIGHTSQUAREB, LEFTCURLYB, RIGHTCURLYB, NUMBER, BOOLEAN, CHAR, STRING, DEFINE, LET, COND, IF, BEGIN, IDENTIFIER, EOF}
 }

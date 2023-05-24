@@ -5,7 +5,7 @@ import java.util.Locale;
 import java.util.Scanner;
 
 /**
- * PPL Project 1
+ * PPL Project 1_1 - Lexical Analyzer
  * 1-	Mustafa Emir Uyar (Representative) 150120007
  * 2-	Ege Keklikçi 150121029
  * 3-	Umut Özil 150121019
@@ -54,7 +54,7 @@ public class Lexical_Analyzer {
             }
             writer.close();
 
-            /*
+            /* No need to write the output to the console since we combined the project with the parser
             //Writing the output to the console
             Scanner fileReader = new Scanner(outputFile);
             while (fileReader.hasNextLine())

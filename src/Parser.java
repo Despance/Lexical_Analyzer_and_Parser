@@ -93,13 +93,17 @@ public class Parser {
 
         // get the lexeme represented by the token
         if (currentToken == TOKENS.STRING) {
+            // if the token is 'STRING', get the lexeme between double quotes
             for (int i = 1; i < line.length() - index; i++) {
                 ch = line.charAt(index + i);
                 currentLexeme += ch;
-                if (ch == '"' && currentLexeme.charAt(currentLexeme.length() - 2) != '\\') // if the lexeme is a string, it ends with a '"' character
+                // if the current character is '"' and the previous character is not '\', it means the lexeme is finished
+                if (ch == '"' && currentLexeme.charAt(currentLexeme.length() - 2) != '\\')
                     break;
             }
-        } else if (!isBracket(ch)) {
+        }
+        // if the token is not any bracket, get the lexeme until the next space or bracket
+        else if (!isBracket(ch)) {
             for (int i = 1; i < line.length() - index; i++) {
                 ch = line.charAt(index + i);
                 if (ch == ' ' || isBracket(ch))
@@ -120,12 +124,12 @@ public class Parser {
         int temp = cursor;
         lex();
         cursor = temp;
-        // if the first token is a '(', it means the rule is <Program> -> <TopLevelForm><Program>
+        // if the first token is a '(', it means the grammar is <Program> -> <TopLevelForm><Program>
         if (currentToken == TOKENS.LEFTPAR) {
             TopLevelForm();
             Program();
         }
-        // else the rule is <Program> -> ε
+        // else the grammar is <Program> -> ε
         else
             output.add(out.substring(0, out.indexOf('<')) + " __");
 
@@ -140,14 +144,14 @@ public class Parser {
         output.add(out);
         depth++;
 
-        // in this rule, the first token must be a '(', else it is an error
+        // in this grammar, the first token must be a '(', else it is an error
         lex();
         if (currentToken != TOKENS.LEFTPAR)
             error("'('");
         addOutput(); // print the current token
-        SecondLevelForm(); // then call SecondLevelForm rule
+        SecondLevelForm(); // then call SecondLevelForm grammar
 
-        // after SecondLevelForm rule, the next token must be a ')', else it is an error
+        // after SecondLevelForm grammar, the next token must be a ')', else it is an error
         lex();
         if (currentToken != TOKENS.RIGHTPAR)
             error("')'");
@@ -167,16 +171,16 @@ public class Parser {
         int temp = cursor;
         lex();
         cursor = temp;
-        // if the next token is 'DEFINE', it means the rule is <SecondLevelForm> -> <Definition>
+        // if the next token is 'DEFINE', it means the grammar is <SecondLevelForm> -> <Definition>
         if (currentToken == TOKENS.DEFINE) {
             Definition();
         }
-        // if the current token is '(', it means the rule is <SecondLevelForm> -> ( <FunCall> )
+        // if the current token is '(', it means the grammar is <SecondLevelForm> -> ( <FunCall> )
         else if (currentToken == TOKENS.LEFTPAR) {
             addOutput(); // print the current token
             FunCall();
 
-            // after FunCall rule, the next token must be a ')', else it is an error
+            // after FunCall grammar, the next token must be a ')', else it is an error
             lex();
             if (currentToken != TOKENS.RIGHTPAR)
                 error("')'");
@@ -197,12 +201,12 @@ public class Parser {
         output.add(out);
         depth++;
 
-        // in this rule first token must be 'DEFINE', else it is an error
+        // in this grammar first token must be 'DEFINE', else it is an error
         lex();
         if (currentToken != TOKENS.DEFINE)
             error("'define'");
         addOutput(); // print the current token
-        DefinitionRight(); // then call DefinitionRight rule
+        DefinitionRight(); // then call DefinitionRight grammar
 
         depth--;
     }
@@ -215,13 +219,13 @@ public class Parser {
         output.add(out);
         depth++;
 
-        // if the current token is an 'IDENTIFIER', it means the rule is <DefinitionRight> -> IDENTIFIER <Expression>
+        // if the current token is an 'IDENTIFIER', it means the grammar is <DefinitionRight> -> IDENTIFIER <Expression>
         lex();
         if (currentToken == TOKENS.IDENTIFIER) {
             addOutput(); // print the current token
             Expression();
         }
-        // if the current token is '(', it means the rule is <DefinitionRight> -> ( IDENTIFIER <ArgList> ) <Statements>
+        // if the current token is '(', it means the grammar is <DefinitionRight> -> ( IDENTIFIER <ArgList> ) <Statements>
         else if (currentToken == TOKENS.LEFTPAR) {
             addOutput(); // print the current token
 
@@ -232,7 +236,7 @@ public class Parser {
             addOutput(); // print the current token
             ArgList();
 
-            // after ArgList rule, the next token must be a ')', else it is an error
+            // after ArgList grammar, the next token must be a ')', else it is an error
             lex();
             if (currentToken != TOKENS.RIGHTPAR)
                 error("')'");
@@ -256,12 +260,12 @@ public class Parser {
 
         int temp = cursor;
         lex();
-        // if the next token is an 'IDENTIFIER', it means the rule is <ArgList> -> IDENTIFIER <ArgList>
+        // if the next token is an 'IDENTIFIER', it means the grammar is <ArgList> -> IDENTIFIER <ArgList>
         if (currentToken == TOKENS.IDENTIFIER) {
             addOutput(); // print the current token
             ArgList();
         }
-        // if the current token is not an 'IDENTIFIER', it means the rule is <ArgList> -> ε
+        // if the current token is not an 'IDENTIFIER', it means the grammar is <ArgList> -> ε
         else {
             output.add(out.substring(0, out.indexOf('<')) + " __");
             cursor = temp;
@@ -281,12 +285,12 @@ public class Parser {
         lex();
         cursor = temp;
         // if the next token is one of 'IDENTIFIER' or 'NUMBER' or 'CHAR' or 'BOOLEAN' or 'STRING' or '('
-        // it means the rule is <Statements> -> <Expression>
+        // it means the grammar is <Statements> -> <Expression>
         if (currentToken == TOKENS.IDENTIFIER || currentToken == TOKENS.NUMBER || currentToken == TOKENS.CHAR
                 || currentToken == TOKENS.BOOLEAN || currentToken == TOKENS.STRING || currentToken == TOKENS.LEFTPAR) {
             Expression();
         }
-        // if the next token is the 'DEFINE', it means the rule is <Statements> -> <Definition> <Statements>
+        // if the next token is the 'DEFINE', it means the grammar is <Statements> -> <Definition> <Statements>
         else if (currentToken == TOKENS.DEFINE) {
             Definition();
             Statements();
@@ -310,13 +314,13 @@ public class Parser {
         lex();
         cursor = temp;
         // if the next token is one of 'IDENTIFIER' or 'NUMBER' or 'CHAR' or 'BOOLEAN' or 'STRING' or '('
-        // it means the rule is <Expressions> -> <Expression> <Expressions>
+        // it means the grammar is <Expressions> -> <Expression> <Expressions>
         if (currentToken == TOKENS.IDENTIFIER || currentToken == TOKENS.NUMBER || currentToken == TOKENS.CHAR
                 || currentToken == TOKENS.BOOLEAN || currentToken == TOKENS.STRING || currentToken == TOKENS.LEFTPAR) {
             Expression();
             Expressions();
         }
-        // if the next token is not one of the above, it means the rule is <Expressions> -> ε
+        // if the next token is not one of the above, it means the grammar is <Expressions> -> ε
         else {
             output.add(out.substring(0, out.indexOf('<')) + " __");
         }
@@ -341,7 +345,7 @@ public class Parser {
             case STRING:
                 addOutput(); // print the current token
                 break;
-            // if the current token is '(', it means the rule is <Expression> -> ( <Expr> )
+            // if the current token is '(', it means the grammar is <Expression> -> ( <Expr> )
             case LEFTPAR:
                 addOutput(); // print the current token
                 Expr(); // call Expr
@@ -373,23 +377,23 @@ public class Parser {
         cursor = temp;
 
         switch (currentToken) {
-            // if the next token is 'LET', it means the rule is <Expr> -> <LetExpression>
+            // if the next token is 'LET', it means the grammar is <Expr> -> <LetExpression>
             case LET:
                 LetExpression(); // call LetExpression
                 break;
-            // if the next token is 'COND', it means the rule is <Expr> -> <CondExpression>
+            // if the next token is 'COND', it means the grammar is <Expr> -> <CondExpression>
             case COND:
                 CondExpression(); // call CondExpression
                 break;
-            // if the next token is 'IF', it means the rule is <Expr> -> <IfExpression>
+            // if the next token is 'IF', it means the grammar is <Expr> -> <IfExpression>
             case IF:
                 IfExpression(); // call IfExpression
                 break;
-            // if the next token is 'BEGIN', it means the rule is <Expr> -> <BeginExpression>
+            // if the next token is 'BEGIN', it means the grammar is <Expr> -> <BeginExpression>
             case BEGIN:
                 BeginExpression(); // call BeginExpression
                 break;
-            // if the next token is 'IDENTIFIER', it means the rule is <Expr> -> <FunCall>
+            // if the next token is 'IDENTIFIER', it means the grammar is <Expr> -> <FunCall>
             case IDENTIFIER:
                 FunCall(); // call FunCall
                 break;
@@ -401,7 +405,7 @@ public class Parser {
         depth--;
     }
 
-    //<FunCall> -> IDENTIFIER <Expressions>
+    /* <FunCall> -> IDENTIFIER <Expressions> */
     public static void FunCall() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -419,7 +423,7 @@ public class Parser {
         depth--;
     }
 
-    //<LetExpression> -> LET <LetExpr>
+    /* <LetExpression> -> LET <LetExpr> */
     public static void LetExpression() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -437,7 +441,7 @@ public class Parser {
         depth--;
     }
 
-    //<LetExpr> -> ( <VarDefs> <Statements> ) | IDENTIFIER ( <VarDefs> <Statements> )
+    /* <LetExpr> -> ( <VarDefs> <Statements> ) | IDENTIFIER ( <VarDefs> <Statements> ) */
     public static void LetExpr() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -446,7 +450,7 @@ public class Parser {
         depth++;
 
         lex();
-        // if the next token is '(', it means the rule is <LetExpr> -> ( <VarDefs> <Statements> )
+        // if the next token is '(', it means the grammar is <LetExpr> -> ( <VarDefs> <Statements> )
         if (currentToken == TOKENS.LEFTPAR) {
             addOutput();
             VarDefs();
@@ -457,7 +461,7 @@ public class Parser {
             addOutput();
             Statements();
         }
-        // if the next token is 'IDENTIFIER', it means the rule is <LetExpr> -> IDENTIFIER ( <VarDefs> <Statements> )
+        // if the next token is 'IDENTIFIER', it means the grammar is <LetExpr> -> IDENTIFIER ( <VarDefs> <Statements> )
         else if (currentToken == TOKENS.IDENTIFIER) {
             addOutput();
 
@@ -480,7 +484,7 @@ public class Parser {
         depth--;
     }
 
-    //<VarDefs> -> ( IDENTIFIER <Expression> ) <VarDef>
+    /* <VarDefs> -> ( IDENTIFIER <Expression> ) <VarDef> */
     public static void VarDefs() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -512,7 +516,7 @@ public class Parser {
         depth--;
     }
 
-    //<VarDef> -> ε | <VarDefs>
+    /* <VarDef> -> ε | <VarDefs> */
     public static void VarDef() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -525,17 +529,18 @@ public class Parser {
         lex();
         cursor = temp;
 
-        // if the next token is '(', it means the rule is <VarDef> -> <VarDefs>
+        // if the next token is '(', it means the grammar is <VarDef> -> <VarDefs>
         if (currentToken == TOKENS.LEFTPAR) {
             VarDefs();
-        } else {
-            // if the next token is not '(', it means the rule is <VarDef> -> ε
-            output.add(out.substring(0, out.indexOf('<')) + " __");
         }
+        // if the next token is not '(', it means the grammar is <VarDef> -> ε
+        else
+            output.add(out.substring(0, out.indexOf('<')) + " __");
+
         depth--;
     }
 
-    //CondExpression -> COND <CondBranches>
+    /* <CondExpression> -> COND <CondBranches> */
     public static void CondExpression() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -548,13 +553,13 @@ public class Parser {
         if (currentToken != TOKENS.COND)
             error("'cond'");
 
-        addOutput();//add current token to output
+        addOutput(); // add current token to output
         CondBranches(); // call CondBranches
 
         depth--;
     }
 
-    //CondBranches -> ( <Expression> <Statements> ) <CondBranch>
+    /* <CondBranches> -> ( <Expression> <Statements> ) <CondBranch> */
     public static void CondBranches() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -580,7 +585,7 @@ public class Parser {
         depth--;
     }
 
-    //CondBranch -> ε | (<Expression> <Statements>)
+    /* <CondBranch> -> ε | (<Expression> <Statements>) */
     public static void CondBranch() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -589,10 +594,10 @@ public class Parser {
         depth++;
 
         lex();
-        //if the next token is '(', it means the rule is CondBranch -> (<Expression> <Statements>)
+        // if the next token is '(', it means the grammar is CondBranch -> (<Expression> <Statements>)
         if (currentToken == TOKENS.LEFTPAR) {
             addOutput();
-            //call the grammar rule functions
+            // call the grammar rule functions
             Expression();
             Statements();
 
@@ -600,14 +605,15 @@ public class Parser {
             if (currentToken != TOKENS.RIGHTPAR)
                 error("')'");
             addOutput();
-        } else {
-            //if the next token is not '(', it means the rule is CondBranch -> ε
-            output.add(out.substring(0, out.indexOf('<')) + " __");
         }
+        // if the next token is not '(', it means the grammar is CondBranch -> ε
+        else
+            output.add(out.substring(0, out.indexOf('<')) + " __");
+
         depth--;
     }
 
-    //IfExpression -> IF <Expression> <Expression> <EndExpression>
+    /* <IfExpression> -> IF <Expression> <Expression> <EndExpression> */
     public static void IfExpression() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -618,8 +624,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.IF)
             error("'if'");
-        addOutput();//add current token to output
-        //call the grammar rule functions
+        addOutput(); // add current token to output
+        // call the grammar rule functions
         Expression();
         Expression();
         EndExpression();
@@ -627,7 +633,7 @@ public class Parser {
         depth--;
     }
 
-    //<EndExpression> -> ε | <Expression>
+    /* <EndExpression> -> ε | <Expression> */
     public static void EndExpression() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -635,22 +641,23 @@ public class Parser {
         output.add(out);
         depth++;
 
-        //keep the current token in a temp variable to restore it later
+        // keep the current token in a temp variable to restore it later
         int temp = cursor;
         lex();
         cursor = temp;
 
-        //check if the current token is an identifier, number, char, boolean, string, or left parenthesis
+        // check if the current token is an 'IDENTIFIER', 'NUMBER', 'CHAR', 'BOOLEAN', 'STRING' or '('
         if (currentToken == TOKENS.IDENTIFIER || currentToken == TOKENS.NUMBER || currentToken == TOKENS.CHAR
                 || currentToken == TOKENS.BOOLEAN || currentToken == TOKENS.STRING || currentToken == TOKENS.LEFTPAR)
             Expression();
-        else {
+            // if the next token is not one of the above, throw an error
+        else
             output.add(out.substring(0, out.indexOf('<')) + " __");
-        }
+
         depth--;
     }
 
-    //BeginExpression -> BEGIN <Statements>
+    /* <BeginExpression> -> BEGIN <Statements> */
     public static void BeginExpression() {
         String out = addSpace();
         out += ("<" + new Object() {
@@ -661,8 +668,8 @@ public class Parser {
         lex();
         if (currentToken != TOKENS.BEGIN)//check if the current token is 'begin'
             error("'begin'");
-        addOutput();//print the token and lexeme
-        Statements();//call the Statements function
+        addOutput(); // print the token and lexeme
+        Statements(); // call the Statements function
         depth--;
     }
 
@@ -678,7 +685,7 @@ public class Parser {
         output.add(out);
     }
 
-    //add space to the output according to the depth of the function call.
+    // add space to the output according to the depth of the function call.
     public static String addSpace() {
         String out = "";
         for (int i = 0; i < depth; i++)
